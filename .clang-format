@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+Language: Cpp
+IndentWidth: 2
+ContinuationIndentWidth: 2
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Allman
+AlwaysBreakAfterReturnType: AllDefinitions
+AlignAfterOpenBracket: Align
+AlignConsecutiveDeclarations: Consecutive
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+IndentPPDirectives: None
+PointerAlignment: Right
+SortIncludes: Never

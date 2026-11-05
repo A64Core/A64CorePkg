@@ -1,0 +1,11 @@
+## @file
+# A64Core package declaration.
+##
+
+[Defines]
+  DEC_SPECIFICATION = 0x0001001B
+  PACKAGE_NAME      = A64CorePkg
+  PACKAGE_GUID      = F0BA4546-16C0-4874-8CDB-C4EB66DA1AD7
+  PACKAGE_VERSION   = 0.1
+
+[LibraryClasses]

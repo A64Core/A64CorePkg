@@ -1,0 +1,22 @@
+## @file
+# A64Core UEFI application.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = A64Core
+  FILE_GUID      = A17453ED-3ED1-4E72-BE35-67C7AB8B092F
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  ENTRY_POINT    = UefiMain
+
+[Sources]
+  A64Core.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib

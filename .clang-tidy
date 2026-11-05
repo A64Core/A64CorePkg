@@ -1,0 +1,4 @@
+Checks: '-*,clang-analyzer-*,bugprone-*,performance-*,portability-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: '(^|/)A64CorePkg/(Application|Include|Library)/'
+FormatStyle: file

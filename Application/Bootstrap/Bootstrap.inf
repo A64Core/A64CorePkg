@@ -1,0 +1,28 @@
+## @file
+# Bootstrap UEFI application.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = Bootstrap
+  FILE_GUID      = E26659F1-BB3E-45AD-ABC0-4071E29BE762
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  ENTRY_POINT    = UefiMain
+
+[Sources]
+  Bootstrap.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  DevicePathLib
+  MemoryAllocationLib
+  UefiApplicationEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid ## CONSUMES
