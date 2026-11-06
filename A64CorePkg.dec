@@ -12,4 +12,5 @@
   Include
 
 [LibraryClasses]
+  AcBootManagementLib|Include/Library/AcBootManagementLib.h
   AcMainLib|Include/Library/AcMainLib.h

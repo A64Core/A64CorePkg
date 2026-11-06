@@ -1,0 +1,31 @@
+## @file
+# A64Core boot management library.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcBootManagementLib
+  FILE_GUID      = 4582F946-FEF9-4CA7-A36D-F1219D3335ED
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcBootManagementLib|UEFI_APPLICATION
+
+[Sources]
+  AcBootManagementLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseCryptLib
+  BaseLib
+  ArmLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib

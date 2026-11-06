@@ -18,6 +18,7 @@
   A64CorePkg/A64CorePkg.dec
 
 [LibraryClasses]
+  AcBootManagementLib
   BaseLib
   BaseMemoryLib
   DebugLib
