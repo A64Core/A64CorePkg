@@ -1,0 +1,28 @@
+## @file
+# A64Core primary coordination library.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcMainLib
+  FILE_GUID      = FEB59B6D-DFB6-4667-86B3-F43BE637C297
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcMainLib|UEFI_APPLICATION
+
+[Sources]
+  A64CoreMisc.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiLib

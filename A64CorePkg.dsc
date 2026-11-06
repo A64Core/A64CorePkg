@@ -15,6 +15,7 @@
 !include MdePkg/MdeLibs.dsc.inc
 
 [LibraryClasses]
+  AcMainLib|A64CorePkg/Library/AcMainLib/AcMainLib.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf

@@ -18,5 +18,6 @@
   A64CorePkg/A64CorePkg.dec
 
 [LibraryClasses]
+  AcMainLib
   UefiApplicationEntryPoint
   UefiLib
