@@ -17,6 +17,7 @@
 [LibraryClasses]
   AcBootManagementLib|A64CorePkg/Library/AcBootManagementLib/AcBootManagementLib.inf
   AcMainLib|A64CorePkg/Library/AcMainLib/AcMainLib.inf
+  AcPlistLib|A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
@@ -43,3 +44,4 @@
 [Components]
   A64CorePkg/Application/Bootstrap/Bootstrap.inf
   A64CorePkg/Application/A64Core/A64Core.inf
+  A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
