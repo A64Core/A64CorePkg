@@ -41,6 +41,38 @@ typedef struct
 } AC_KERNEL_COLLECTION_CONTEXT;
 
 /**
+  An equal-length binary patch.
+
+  Replace is required and Size must be nonzero. Find, Mask, and ReplaceMask, when
+  present, each reference Size bytes. Their lengths are checked by the caller
+  before constructing this descriptor. All referenced data must remain immutable
+  during the call and must not alias the payload being modified.
+
+  NULL or empty Base starts at the target's Mach-O header. A nonempty Base names
+  a defined symbol. Without Find, a nonempty Base is required and Replace is
+  copied there once; masks, Count, Skip, and Limit are ignored in that mode.
+
+  With Find, comparison is (Data & Mask) == Find, or exact without Mask. Bits in
+  Find outside Mask must be zero to match. ReplaceMask selects bits to update.
+  Count is a maximum (zero means all), Skip counts nonoverlapping matches, and
+  Limit bounds file-coordinate bytes from the header or resolved Base (zero
+  means the remaining target range). A skipped or replaced match advances Size.
+**/
+typedef struct
+{
+  CONST CHAR8 *Comment;
+  CONST CHAR8 *Base;
+  CONST UINT8 *Find;
+  CONST UINT8 *Replace;
+  CONST UINT8 *Mask;
+  CONST UINT8 *ReplaceMask;
+  UINT32       Size;
+  UINT32       Count;
+  UINT32       Skip;
+  UINT32       Limit;
+} AC_KERNEL_PATCH;
+
+/**
   Identify an unpacked AArch64 MH_EXECUTE or MH_FILESET payload.
 
   Checks the Mach-O header, load-command framing, segment file ranges, and
@@ -105,5 +137,41 @@ VOID AcKernelCollectionFree(IN OUT AC_KERNEL_COLLECTION_CONTEXT *Context OPTIONA
 EFI_STATUS
 AcKernelReadDarwinVersion(IN CONST AC_KERNEL_COLLECTION_CONTEXT *Context,
                           OUT UINT32                            *DarwinVersion);
+
+/**
+  Apply one patch to the kernel (Identifier "kernel") or a fileset entry ID.
+
+  Searches the target header and file-backed segments in ascending file order,
+  starting at its Mach-O header or Base. Gaps and bytes also claimed by another
+  image are excluded, including shared LINKEDIT data. Adjacent owned ranges may
+  be matched across their boundary; gaps are never concatenated. Limit counts
+  file-coordinate bytes, including gaps. Base uses LC_SYMTAB, falling back to
+  the collection's LC_SYMTAB when the target has none. Defined N_SECT and N_ABS
+  symbols are supported; zero-fill addresses have no patchable file contents.
+
+  Writes are immediate and are not rolled back. At least one replacement is a
+  success even if Count is not reached. AppliedCount reports writes even if a
+  later error occurs. The root index and other images are protected from writes,
+  so entry pointers remain valid after a successful call. The target header and
+  commands are validated after writes. If they invalidate the collection,
+  Context is cleared while the caller still owns the modified Buffer.
+  Symbols and fixups are not rebuilt.
+
+  @param[in,out] Context       Initialized collection context.
+  @param[in]     Identifier    Target name; must be nonempty.
+  @param[in]     Patch         Patch descriptor.
+  @param[out]    AppliedCount  Actual replacements, or zero before any write.
+
+  @retval EFI_SUCCESS            At least one replacement was made.
+  @retval EFI_INVALID_PARAMETER  A pointer, context, or descriptor is invalid.
+  @retval EFI_NOT_FOUND          No target, usable symbol, or replacement was found.
+  @retval EFI_UNSUPPORTED        A matching symbol form or direct-write range is unsupported.
+  @retval EFI_COMPROMISED_DATA   Metadata is malformed, or writes invalidated the collection.
+  @retval EFI_OUT_OF_RESOURCES   Temporary patcher data could not be allocated.
+**/
+EFI_STATUS
+AcKernelCollectionApplyPatch(IN OUT AC_KERNEL_COLLECTION_CONTEXT *Context,
+                             IN CONST CHAR8 *Identifier, IN CONST AC_KERNEL_PATCH *Patch,
+                             OUT UINT32 *AppliedCount OPTIONAL);
 
 #endif

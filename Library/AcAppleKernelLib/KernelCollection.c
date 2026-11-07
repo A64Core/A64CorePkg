@@ -147,3 +147,65 @@ AcKernelCollectionFree(IN OUT AC_KERNEL_COLLECTION_CONTEXT *Context OPTIONAL)
 
   ZeroMem(Context, sizeof(*Context));
 }
+
+EFI_STATUS
+AcKernelCollectionApplyPatch(IN OUT AC_KERNEL_COLLECTION_CONTEXT *Context,
+                             IN CONST CHAR8 *Identifier, IN CONST AC_KERNEL_PATCH *Patch,
+                             OUT UINT32 *AppliedCount OPTIONAL)
+{
+  AC_PATCHER_CONTEXT Patcher;
+  AC_MACH_HEADER     Header;
+  EFI_STATUS         Status;
+  EFI_STATUS         ValidationStatus;
+  UINT32             EntryIndex;
+  UINT32             Count;
+
+  if (AppliedCount != NULL)
+    *AppliedCount = 0;
+
+  if ((Context == NULL) || (Context->Buffer == NULL) || (Context->Entries == NULL) ||
+      (Context->KernelIndex >= Context->EntryCount) ||
+      (Context->BufferSize > Context->BufferCapacity) || (Identifier == NULL) ||
+      (Identifier[0] == '\0') || (Patch == NULL) || (Patch->Replace == NULL) ||
+      (Patch->Size == 0) ||
+      ((Patch->Find == NULL) && ((Patch->Base == NULL) || (Patch->Base[0] == '\0'))))
+    return EFI_INVALID_PARAMETER;
+
+  if (AsciiStrCmp(Identifier, "kernel") == 0)
+    EntryIndex = Context->KernelIndex;
+  else
+  {
+    for (EntryIndex = 0; EntryIndex < Context->EntryCount; ++EntryIndex)
+    {
+      if (AsciiStrCmp(Identifier, Context->Entries[EntryIndex].Identifier) == 0)
+        break;
+    }
+  }
+
+  if (EntryIndex == Context->EntryCount)
+    return EFI_NOT_FOUND;
+
+  Status = InternalInitPatcher(Context, EntryIndex, &Patcher);
+  if (EFI_ERROR(Status))
+    return Status;
+
+  Status = InternalApplyKernelPatch(&Patcher, Patch, &Count);
+  InternalFreePatcher(&Patcher);
+  if (AppliedCount != NULL)
+    *AppliedCount = Count;
+
+  if (Count != 0)
+  {
+    // The root index and peer images are protected; only this image can have changed.
+    ValidationStatus = InternalReadMachHeader(Context->Buffer, Context->BufferSize,
+                                              Context->Entries[EntryIndex].FileOffset, &Header);
+    if (EFI_ERROR(ValidationStatus) || (Header.FileType == AC_MACH_FILESET) ||
+        ((EntryIndex == Context->KernelIndex) && (Header.FileType != AC_MACH_EXECUTE)))
+    {
+      AcKernelCollectionFree(Context);
+      Status = EFI_COMPROMISED_DATA;
+    }
+  }
+
+  return Status;
+}

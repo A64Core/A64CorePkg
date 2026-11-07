@@ -15,6 +15,7 @@
   KernelReader.c
   KernelVersion.c
   KernelCollection.c
+  KextPatcher.c
 
 [Packages]
   MdePkg/MdePkg.dec

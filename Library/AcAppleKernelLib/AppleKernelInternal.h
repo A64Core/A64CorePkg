@@ -115,6 +115,26 @@ typedef struct
   UINT64 Value;
 } AC_MACH_SYMBOL;
 
+typedef struct
+{
+  UINTN Offset;
+  UINTN Size;
+} AC_KERNEL_FILE_RANGE;
+
+typedef struct
+{
+  UINT8                *Buffer;
+  UINTN                 HeaderOffset;
+  AC_MACH_SEGMENT      *Segments;
+  UINT32                SegmentCount;
+  AC_KERNEL_FILE_RANGE *Ranges;
+  UINTN                 RangeCount;
+  AC_KERNEL_FILE_RANGE *Excluded;
+  UINTN                 ExcludedCount;
+  AC_MACH_SYMTAB        Symtab;
+  BOOLEAN               HasSymtab;
+} AC_PATCHER_CONTEXT;
+
 STATIC_ASSERT(sizeof(AC_MACH_HEADER) == 32, "Invalid Mach-O header layout");
 STATIC_ASSERT(sizeof(AC_MACH_COMMAND) == 8, "Invalid Mach-O command layout");
 STATIC_ASSERT(sizeof(AC_MACH_SEGMENT) == 72, "Invalid Mach-O segment layout");
@@ -134,5 +154,22 @@ STATIC_ASSERT(sizeof(AC_MACH_LINKEDIT_DATA) == 16, "Invalid Mach-O linkedit data
 EFI_STATUS
 InternalReadMachHeader(IN CONST UINT8 *Buffer, IN UINTN BufferSize, IN UINTN HeaderOffset,
                        OUT AC_MACH_HEADER *Header);
+
+/** Initialize an owned-range view of a validated collection entry. **/
+EFI_STATUS
+InternalInitPatcher(IN CONST AC_KERNEL_COLLECTION_CONTEXT *Collection, IN UINT32 EntryIndex,
+                    OUT AC_PATCHER_CONTEXT *Patcher);
+
+VOID InternalFreePatcher(IN OUT AC_PATCHER_CONTEXT *Patcher);
+
+/** Return a target virtual address's file offset, rejecting ambiguous mappings. **/
+EFI_STATUS
+InternalPatcherAddressToOffset(IN CONST AC_PATCHER_CONTEXT *Patcher, IN UINT64 Address,
+                               OUT UINTN *Offset);
+
+/** Apply a binary patch to the target's owned file ranges. **/
+EFI_STATUS
+InternalApplyKernelPatch(IN CONST AC_PATCHER_CONTEXT *Patcher, IN CONST AC_KERNEL_PATCH *Patch,
+                         OUT UINT32 *AppliedCount);
 
 #endif
