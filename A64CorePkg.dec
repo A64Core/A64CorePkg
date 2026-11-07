@@ -12,6 +12,7 @@
   Include
 
 [LibraryClasses]
+  AcAppleKernelLib|Include/Library/AcAppleKernelLib.h
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
   AcMainLib|Include/Library/AcMainLib.h
   AcPlistLib|Include/Library/AcPlistLib.h

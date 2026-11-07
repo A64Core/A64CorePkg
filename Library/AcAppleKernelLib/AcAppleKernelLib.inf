@@ -1,0 +1,26 @@
+## @file
+# Apple kernel payload inspection and kernel collection support.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAppleKernelLib
+  FILE_GUID      = 32DE99C3-26BE-4CA2-923C-9DBF24B7BD61
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAppleKernelLib|UEFI_APPLICATION
+
+[Sources]
+  AppleKernelInternal.h
+  KernelReader.c
+  KernelVersion.c
+  KernelCollection.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
