@@ -17,6 +17,9 @@
   ApfsBtree.c
   ApfsObjectMap.c
   ApfsVolume.c
+  ApfsInode.c
+  ApfsDirectory.c
+  ApfsFile.c
   ApfsName.c
   ApfsUnicodeData.h
 
