@@ -1,0 +1,24 @@
+## @file
+# Read-only APFS container metadata support.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcApfsLib
+  FILE_GUID      = 7E47A110-0A46-4F45-BEC6-DB76070CFDAF
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcApfsLib
+
+[Sources]
+  ApfsInternal.h
+  ApfsName.c
+  ApfsUnicodeData.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  MemoryAllocationLib

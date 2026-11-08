@@ -15,6 +15,7 @@
 !include MdePkg/MdeLibs.dsc.inc
 
 [LibraryClasses]
+  AcApfsLib|A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
   AcAppleKernelLib|A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
   AcBootManagementLib|A64CorePkg/Library/AcBootManagementLib/AcBootManagementLib.inf
   AcMainLib|A64CorePkg/Library/AcMainLib/AcMainLib.inf
@@ -47,3 +48,4 @@
   A64CorePkg/Application/A64Core/A64Core.inf
   A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
   A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
+  A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
