@@ -12,6 +12,11 @@
 
 [Sources]
   ApfsInternal.h
+  ApfsObject.c
+  ApfsContainer.c
+  ApfsBtree.c
+  ApfsObjectMap.c
+  ApfsVolume.c
   ApfsName.c
   ApfsUnicodeData.h
 

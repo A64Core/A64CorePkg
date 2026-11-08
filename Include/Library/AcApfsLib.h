@@ -70,4 +70,40 @@ typedef struct
   CHAR8  Name[APFS_VOLUME_NAME_SIZE];
 } AC_APFS_VOLUME_INFO;
 
+/**
+  Select a valid checkpoint and open its container object map.
+
+  Io is copied; its Context and source remain borrowed and must stay unchanged
+  until CloseContainer. The source begins at the APFS partition, not the disk.
+  Container is NULL on failure. Allocations require Boot Services in UEFI.
+
+  @retval EFI_UNSUPPORTED       Not APFS, or a required format feature is unsupported.
+  @retval EFI_COMPROMISED_DATA  APFS metadata is malformed or no valid checkpoint exists.
+  @retval EFI_OUT_OF_RESOURCES An allocation failed.
+
+  Invalid arguments return EFI_INVALID_PARAMETER. Read errors are propagated.
+  Fragmented checkpoint areas and Fusion containers are currently unsupported.
+**/
+EFI_STATUS
+AcApfsOpenContainer(IN CONST AC_APFS_IO *Io, OUT AC_APFS_CONTAINER **Container);
+
+/** Free the context without releasing the borrowed source. NULL is allowed. **/
+VOID AcApfsCloseContainer(IN AC_APFS_CONTAINER *Container OPTIONAL);
+
+/** Copy container metadata into caller-owned storage; clear Info on failure. **/
+EFI_STATUS
+AcApfsGetContainerInfo(IN CONST AC_APFS_CONTAINER *Container, OUT AC_APFS_CONTAINER_INFO *Info);
+
+/**
+  Read volume metadata by dense index in the container's nonzero volume OID list.
+
+  Info is caller-owned and cleared on failure; an index past the end returns
+  EFI_NOT_FOUND. Names are null-terminated UTF-8. This enumerates superblocks,
+  including encrypted or sealed volumes; it does not open their file trees or
+  imply support for their features. No separately allocated strings are returned.
+**/
+EFI_STATUS
+AcApfsGetVolumeInfo(IN CONST AC_APFS_CONTAINER *Container, IN UINT32 Index,
+                    OUT AC_APFS_VOLUME_INFO *Info);
+
 #endif

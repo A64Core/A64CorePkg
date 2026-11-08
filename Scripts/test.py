@@ -36,6 +36,7 @@ def main() -> int:
     library_root = root / "Library"
     suites = [
         ("AcAppleKernelLib", "PatchTests.c", [library_root / "AcAppleKernelLib" / "KernelReader.c", library_root / "AcAppleKernelLib" / "KernelCollection.c", library_root / "AcAppleKernelLib" / "KernelVersion.c", library_root / "AcAppleKernelLib" / "KextPatcher.c"]),
+        ("AcApfsLib", "ContainerTests.c", [library_root / "AcApfsLib" / "ApfsName.c", library_root / "AcApfsLib" / "ApfsObject.c", library_root / "AcApfsLib" / "ApfsContainer.c", library_root / "AcApfsLib" / "ApfsBtree.c", library_root / "AcApfsLib" / "ApfsObjectMap.c", library_root / "AcApfsLib" / "ApfsVolume.c"]),
         ("AcPlistLib", "PlistTests.c", [library_root / "AcPlistLib" / "AcPlistLib.c", library_root / "AcPlistLib" / "PlistParser.c", library_root / "AcPlistLib" / "PlistValue.c"]),
     ]
     try:
