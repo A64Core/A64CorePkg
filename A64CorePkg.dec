@@ -15,6 +15,7 @@
   AcApfsLib|Include/Library/AcApfsLib.h
   AcAppleKernelLib|Include/Library/AcAppleKernelLib.h
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
+  AcConfigurationLib|Include/Library/AcConfigurationLib.h
   AcMainLib|Include/Library/AcMainLib.h
   AcPlistLib|Include/Library/AcPlistLib.h
 

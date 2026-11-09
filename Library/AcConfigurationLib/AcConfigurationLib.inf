@@ -1,0 +1,27 @@
+## @file
+# A64Core configuration parsing and ownership.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcConfigurationLib
+  FILE_GUID      = A1C4883E-0A72-443C-A4EE-762C15B3C7DF
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcConfigurationLib
+
+[Sources]
+  AcConfigurationLib.c
+  ConfigurationUefi.c
+  ConfigurationInternal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  AcPlistLib
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib

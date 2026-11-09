@@ -39,6 +39,7 @@ def main() -> int:
         ("AcApfsLib", "ContainerTests.c", [library_root / "AcApfsLib" / "ApfsName.c", library_root / "AcApfsLib" / "ApfsObject.c", library_root / "AcApfsLib" / "ApfsContainer.c", library_root / "AcApfsLib" / "ApfsBtree.c", library_root / "AcApfsLib" / "ApfsObjectMap.c", library_root / "AcApfsLib" / "ApfsVolume.c", library_root / "AcApfsLib" / "ApfsDirectory.c", library_root / "AcApfsLib" / "ApfsFile.c", library_root / "AcApfsLib" / "ApfsInode.c"]),
         ("AcApfsLib", "FileTests.c", [library_root / "AcApfsLib" / "ApfsName.c", library_root / "AcApfsLib" / "ApfsObject.c", library_root / "AcApfsLib" / "ApfsContainer.c", library_root / "AcApfsLib" / "ApfsBtree.c", library_root / "AcApfsLib" / "ApfsObjectMap.c", library_root / "AcApfsLib" / "ApfsVolume.c", library_root / "AcApfsLib" / "ApfsDirectory.c", library_root / "AcApfsLib" / "ApfsFile.c", library_root / "AcApfsLib" / "ApfsInode.c"]),
         ("AcPlistLib", "PlistTests.c", [library_root / "AcPlistLib" / "AcPlistLib.c", library_root / "AcPlistLib" / "PlistParser.c", library_root / "AcPlistLib" / "PlistValue.c"]),
+        ("AcConfigurationLib", "ConfigurationTests.c", [library_root / "AcConfigurationLib" / "AcConfigurationLib.c", library_root / "AcConfigurationLib" / "ConfigurationUefi.c", library_root / "AcPlistLib" / "AcPlistLib.c", library_root / "AcPlistLib" / "PlistParser.c", library_root / "AcPlistLib" / "PlistValue.c"]),
     ]
     try:
         with tempfile.TemporaryDirectory(prefix="a64core-tests-") as directory:
