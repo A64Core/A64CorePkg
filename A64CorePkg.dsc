@@ -49,3 +49,4 @@
   A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
   A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
   A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
+  A64CorePkg/Platform/AcApfsDxe/AcApfsDxe.inf

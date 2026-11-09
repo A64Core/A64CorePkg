@@ -1,0 +1,46 @@
+## @file
+# Read-only APFS UEFI file system driver.
+##
+
+[Defines]
+  INF_VERSION = 0x0001001B
+  BASE_NAME = AcApfsDxe
+  FILE_GUID = 0EF65F10-7F9E-4DC0-9635-7B6C67BBE77A
+  MODULE_TYPE = UEFI_DRIVER
+  VERSION_STRING = 0.1
+  ENTRY_POINT = AcApfsDxeEntryPoint
+  UNLOAD_IMAGE = AcApfsDxeUnload
+
+[Sources]
+  ApfsDxe.h
+  ApfsDxe.c
+  Volume.c
+  File.c
+  FileInfo.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  AcApfsLib
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiDriverBindingProtocolGuid
+  gEfiBlockIoProtocolGuid
+  gEfiDiskIoProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+  gAcApfsVolumeInfoProtocolGuid
+
+[Guids]
+  gEfiFileInfoGuid
+  gEfiFileSystemInfoGuid
+  gEfiFileSystemVolumeLabelInfoIdGuid

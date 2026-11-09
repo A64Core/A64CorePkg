@@ -17,3 +17,6 @@
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
   AcMainLib|Include/Library/AcMainLib.h
   AcPlistLib|Include/Library/AcPlistLib.h
+
+[Protocols]
+  gAcApfsVolumeInfoProtocolGuid = { 0xC3747397, 0x35D5, 0x415F, { 0x88, 0xA4, 0xC5, 0x38, 0x6F, 0x35, 0x90, 0x1C } }
