@@ -12,6 +12,9 @@
 
 [Sources]
   A64CoreMisc.c
+  A64CoreConfig.c
+  A64CoreUefi.c
+  MainInternal.h
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -19,6 +22,7 @@
 
 [LibraryClasses]
   AcBootManagementLib
+  AcConfigurationLib
   BaseLib
   BaseMemoryLib
   DebugLib
@@ -27,3 +31,11 @@
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
   UefiLib
+
+[Protocols]
+  gEfiDevicePathProtocolGuid
+  gEfiLoadedImageProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+
+[Guids]
+  gEfiFileInfoGuid

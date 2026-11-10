@@ -4,11 +4,12 @@
 
 #include <Uefi.h>
 
+#include <Library/AcBootManagementLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 EFI_STATUS
-AcRunBootPicker(IN EFI_HANDLE ImageHandle)
+AcRunBootPicker(IN EFI_HANDLE ImageHandle, IN CONST AC_GLOBAL_CONFIG *Config)
 {
   EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *Input = gST->ConIn;
   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Output = gST->ConOut;

@@ -19,6 +19,8 @@
   A64CorePkg/A64CorePkg.dec
 
 [LibraryClasses]
+  AcAppleKernelLib
+  AcPlistLib
   BaseCryptLib
   BaseLib
   ArmLib
