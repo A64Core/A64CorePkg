@@ -1,47 +1,79 @@
 /** @file
-  Built-in text menu and reboot handling.
+  A64Core boot picker execution loop.
 **/
 
-#include <Uefi.h>
+#include "BootManagementInternal.h"
 
-#include <Library/AcBootManagementLib.h>
-#include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 EFI_STATUS
 AcRunBootPicker(IN EFI_HANDLE ImageHandle, IN CONST AC_GLOBAL_CONFIG *Config)
 {
-  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *Input = gST->ConIn;
-  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Output = gST->ConOut;
-  EFI_INPUT_KEY                    Key;
+  EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *Input;
+  EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Output;
   EFI_STATUS                       Status;
-  UINTN                            EventIndex;
+  EFI_STATUS                       ResolveStatus;
+  EFI_STATUS                       KernelStatus;
+  BOOLEAN                          ResetReturned;
+  BOOLEAN                          Rescan;
+  AC_BOOT_ENTRY                   *Entries = NULL;
+  UINTN                            EntryCount = 0;
+  UINTN                            Selected;
+  AC_BOOT_MENU_ACTION              Action;
+  AC_BOOT_RESOURCES                Resources = {0};
+  AC_BOOT_KERNEL                   Kernel = {0};
 
-  if (Input == NULL || Output == NULL || Input->WaitForKey == NULL)
+  if (ImageHandle == NULL || Config == NULL)
+    return EFI_INVALID_PARAMETER;
+  Input = gST->ConIn;
+  Output = gST->ConOut;
+  if ((Input == NULL) || (Output == NULL) || (Input->WaitForKey == NULL))
+  {
     return EFI_UNSUPPORTED;
+  }
+
   Status = Input->Reset(Input, FALSE);
   if (EFI_ERROR(Status))
+  {
     return Status;
-  Status = Output->ClearScreen(Output);
-  if (EFI_ERROR(Status))
-    return Status;
-  Status = Output->OutputString(Output, L"A64Core\r\n\r\n> Reboot\r\n\r\nEnter: Reboot\r\n");
-  if (EFI_ERROR(Status))
-    return Status;
+  }
+
+  ResetReturned = FALSE;
+  Rescan = TRUE;
   for (;;)
   {
-    Status = gBS->WaitForEvent(1, &Input->WaitForKey, &EventIndex);
+    if (Rescan)
+    {
+      AcFreeBootEntries(Entries, EntryCount);
+      Entries = NULL;
+      EntryCount = 0;
+      Status = AcScanBootEntries(&Entries, &EntryCount);
+      if (EFI_ERROR(Status))
+        break;
+      Rescan = FALSE;
+    }
+    Status =
+      InternalShowBootMenu(Input, Output, Entries, EntryCount, ResetReturned, &Action, &Selected);
     if (EFI_ERROR(Status))
-      return Status;
-    Status = Input->ReadKeyStroke(Input, &Key);
-    if (Status == EFI_NOT_READY)
+      break;
+
+    if (Action == AcBootMenuReboot)
+    {
+      (VOID) Output->OutputString(Output, L"\r\nRebooting...\r\n");
+      gRT->ResetSystem(EfiResetCold, EFI_SUCCESS, 0, NULL);
+      ResetReturned = TRUE;
       continue;
+    }
+    ResolveStatus = AcResolveBootResources(&Entries[Selected], &Resources);
+    KernelStatus = EFI_NOT_STARTED;
+    Status = InternalShowBootResources(Input, Output, &Entries[Selected], ResolveStatus, &Resources,
+                                       KernelStatus, &Kernel);
+    AcFreeBootResources(&Resources);
     if (EFI_ERROR(Status))
-      return Status;
-    if (Key.UnicodeChar != L'\r')
-      continue;
-    (VOID) Output->OutputString(Output, L"\r\nRebooting...\r\n");
-    gRT->ResetSystem(EfiResetCold, EFI_SUCCESS, 0, NULL);
-    return EFI_DEVICE_ERROR;
+      break;
+    Rescan =
+      EFI_ERROR(ResolveStatus) || KernelStatus == EFI_MEDIA_CHANGED || KernelStatus == EFI_NO_MEDIA;
   }
+  AcFreeBootEntries(Entries, EntryCount);
+  return Status;
 }

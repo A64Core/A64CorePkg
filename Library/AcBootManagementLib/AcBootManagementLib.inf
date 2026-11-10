@@ -12,6 +12,11 @@
 
 [Sources]
   AcBootManagementLib.c
+  BootManagementInternal.h
+  BuiltinPicker.c
+  BootScan.c
+  BootResources.c
+  BootFile.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -31,3 +36,14 @@
   PrintLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
+
+[Protocols]
+  gAcApfsVolumeInfoProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+  gEfiPartitionInfoProtocolGuid
+  gEfiGraphicsOutputProtocolGuid
+  gEfiRngProtocolGuid
+
+[Guids]
+  gEfiFileInfoGuid
