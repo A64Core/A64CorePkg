@@ -76,6 +76,65 @@ typedef struct
   UINT32                      KernelIndex;
 } AC_KERNEL_COLLECTION_CONTEXT;
 
+typedef struct
+{
+  UINT64 VirtualBase;
+  UINT64 EntryPoint;
+  UINTN  MemorySize;
+  UINTN  Alignment;
+} AC_KERNEL_LOAD_INFO;
+
+typedef struct
+{
+  VOID                *Buffer;
+  EFI_PHYSICAL_ADDRESS PhysicalBase;
+  EFI_PHYSICAL_ADDRESS EntryPoint;
+  AC_KERNEL_LOAD_INFO  Info;
+} AC_KERNEL_LOADED_IMAGE;
+
+/**
+  Inspect the outer segments and ARM64 LC_UNIXTHREAD entry of a Boot KC.
+
+  Context must be initialized and may have been patched through this library.
+  VirtualBase and EntryPoint are unslid virtual addresses. MemorySize includes
+  segment gaps and trailing 16 KiB rounding. Alignment is the required modulus:
+  physical and virtual bases must have the same offset within 32 MiB.
+  At most 256 outer segments and 65536 combined load commands are supported.
+  File-backed padding checks across embedded zero-fill tails are bounded by the
+  source file size. Other embedded segments must fit an outer segment's mapping.
+
+  Info is cleared on failure. Unsupported layouts return EFI_UNSUPPORTED;
+  inconsistent mappings or entry data return EFI_COMPROMISED_DATA. Exceeding
+  MaxMemorySize or structural limits returns EFI_BAD_BUFFER_SIZE; temporary
+  allocation failure returns EFI_OUT_OF_RESOURCES. Invalid arguments return
+  EFI_INVALID_PARAMETER. No bytes in Context are changed.
+**/
+EFI_STATUS
+AcKernelGetLoadInfo(IN CONST AC_KERNEL_COLLECTION_CONTEXT *Context, IN UINTN MaxMemorySize,
+                    OUT AC_KERNEL_LOAD_INFO *Info);
+
+/**
+  Load a Boot KC into a nonoverlapping caller-owned destination without executing it.
+
+  The layout is rechecked before any writes. Destination is a CPU-accessible
+  pointer to Capacity bytes at PhysicalBase; the caller guarantees that mapping.
+  Its image range must not overlap the source KC. Image must not alias either
+  buffer. No virtual slide, fixups, pointer signing, page-table construction, or
+  executable-cache preparation is performed. KC metadata is preserved for XNU.
+
+  Image borrows Destination, which the caller must retain for handoff or release
+  on cancellation. EntryPoint is physical; Info.EntryPoint is virtual. The source
+  context and allocation remain owned by the caller and are not referenced by Image.
+  Temporary allocations are released before returning. Failure leaves Destination
+  unchanged and clears Image. In addition to inspection errors, a short destination
+  returns EFI_BUFFER_TOO_SMALL; overlap, physical overflow or incompatible base
+  alignment returns EFI_INVALID_PARAMETER.
+**/
+EFI_STATUS
+AcKernelLoadCollection(IN CONST AC_KERNEL_COLLECTION_CONTEXT *Context, OUT VOID *Destination,
+                       IN UINTN Capacity, IN EFI_PHYSICAL_ADDRESS PhysicalBase,
+                       OUT AC_KERNEL_LOADED_IMAGE *Image);
+
 /**
   An equal-length binary patch.
 
