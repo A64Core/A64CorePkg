@@ -13,6 +13,7 @@
 
 [LibraryClasses]
   AcApfsLib|Include/Library/AcApfsLib.h
+  AcAppleImg4Lib|Include/Library/AcAppleImg4Lib.h
   AcAppleKernelLib|Include/Library/AcAppleKernelLib.h
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
   AcConfigurationLib|Include/Library/AcConfigurationLib.h

@@ -1,0 +1,23 @@
+## @file
+# Bounded IMG4 and IM4P structure parsing.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAppleImg4Lib
+  FILE_GUID      = 955B106C-34B7-48B1-9A41-52C08DD5803D
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAppleImg4Lib
+
+[Sources]
+  Img4.c
+  Der.c
+  Img4Internal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
