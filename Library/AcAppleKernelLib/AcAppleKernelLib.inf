@@ -13,6 +13,7 @@
 [Sources]
   AppleKernelInternal.h
   KernelReader.c
+  KernelPayload.c
   KernelVersion.c
   KernelCollection.c
   KextPatcher.c
@@ -22,6 +23,8 @@
   A64CorePkg/A64CorePkg.dec
 
 [LibraryClasses]
+  AcAppleImg4Lib
+  AcCompressionLib
   BaseLib
   BaseMemoryLib
   MemoryAllocationLib

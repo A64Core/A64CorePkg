@@ -14,6 +14,42 @@ typedef enum
   AcKernelPayloadCollection
 } AC_KERNEL_PAYLOAD_TYPE;
 
+typedef enum
+{
+  AcKernelContainerRaw,
+  AcKernelContainerIm4p,
+  AcKernelContainerImg4
+} AC_KERNEL_CONTAINER_TYPE;
+
+typedef struct
+{
+  AC_KERNEL_CONTAINER_TYPE Container;
+  AC_KERNEL_PAYLOAD_TYPE   Type;
+  BOOLEAN                  Compressed;
+} AC_KERNEL_IMAGE_INFO;
+
+/**
+  Normalize an owned pool allocation into a writable, unpacked AArch64 image.
+
+  Buffer must be an allocation releasable with FreePool(). Size is the readable
+  file length and Capacity the allocation size. Raw Mach-O and unencrypted
+  kernel IM4P/IMG4 components (uncompressed or LZFSE) are supported. Unknown auxiliary data,
+  keybags and legacy comp wrappers are unsupported. No signature is verified.
+
+  On success the caller owns the returned allocation. Uncompressed input is
+  reused (wrapped data is moved to its beginning); compressed input is replaced
+  and its original allocation freed. Size and Capacity describe the result.
+  No spare space is reserved. An existing collection must not borrow Buffer.
+
+  On failure Buffer, its bytes, Size and Capacity are unchanged; Info is cleared.
+  MaxDecodedSize bounds the result before output allocation. Exceeding it returns
+  EFI_BAD_BUFFER_SIZE. Other errors follow the container, decoder and Mach-O
+  inspectors. This does not place segments, process fixups, or start the kernel.
+**/
+EFI_STATUS
+AcKernelDecodePayload(IN OUT VOID **Buffer, IN OUT UINTN *Size, IN OUT UINTN *Capacity,
+                      IN UINTN MaxDecodedSize, OUT AC_KERNEL_IMAGE_INFO *Info);
+
 typedef struct
 {
   CONST CHAR8 *Identifier;
