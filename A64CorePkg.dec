@@ -16,6 +16,7 @@
   AcAppleImg4Lib|Include/Library/AcAppleImg4Lib.h
   AcAppleKernelLib|Include/Library/AcAppleKernelLib.h
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
+  AcCompressionLib|Include/Library/AcCompressionLib.h
   AcConfigurationLib|Include/Library/AcConfigurationLib.h
   AcMainLib|Include/Library/AcMainLib.h
   AcPlistLib|Include/Library/AcPlistLib.h

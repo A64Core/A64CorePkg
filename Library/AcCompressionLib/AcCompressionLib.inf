@@ -1,0 +1,29 @@
+## @file
+# LZFSE decompression using the pinned Apple sources.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcCompressionLib
+  FILE_GUID      = E27C1BDC-7D29-4CDD-A0D1-B0976C48446A
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcCompressionLib
+
+[Sources]
+  Lzfse.c
+  Compat/assert.h
+  Compat/stdlib.h
+  Compat/string.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  MemoryAllocationLib
+
+[BuildOptions]
+  # Upstream LZ back-references use unsigned pointer offsets.
+  GCC:*_*_*_CC_FLAGS = -ffreestanding -fwrapv-pointer -I$(MODULE_DIR)/Compat

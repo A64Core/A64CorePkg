@@ -19,6 +19,7 @@
   AcAppleImg4Lib|A64CorePkg/Library/AcAppleImg4Lib/AcAppleImg4Lib.inf
   AcAppleKernelLib|A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
   AcBootManagementLib|A64CorePkg/Library/AcBootManagementLib/AcBootManagementLib.inf
+  AcCompressionLib|A64CorePkg/Library/AcCompressionLib/AcCompressionLib.inf
   AcConfigurationLib|A64CorePkg/Library/AcConfigurationLib/AcConfigurationLib.inf
   AcMainLib|A64CorePkg/Library/AcMainLib/AcMainLib.inf
   AcPlistLib|A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
@@ -53,4 +54,5 @@
   A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
   A64CorePkg/Library/AcConfigurationLib/AcConfigurationLib.inf
   A64CorePkg/Library/AcAppleImg4Lib/AcAppleImg4Lib.inf
+  A64CorePkg/Library/AcCompressionLib/AcCompressionLib.inf
   A64CorePkg/Platform/AcApfsDxe/AcApfsDxe.inf
