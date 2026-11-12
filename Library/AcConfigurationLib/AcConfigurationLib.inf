@@ -13,6 +13,7 @@
 [Sources]
   AcConfigurationLib.c
   ConfigurationUefi.c
+  ConfigurationKernel.c
   ConfigurationInternal.h
 
 [Packages]

@@ -39,6 +39,10 @@ AcConfigurationFree(IN OUT AC_GLOBAL_CONFIG *Config OPTIONAL)
     InternalConfigurationFreeDriver(&Config->Uefi.Drivers[Index]);
   if (Config->Uefi.Drivers != NULL)
     FreePool(Config->Uefi.Drivers);
+  for (Index = 0; Index < Config->Kernel.PatchCount; ++Index)
+    InternalConfigurationFreePatch(&Config->Kernel.Patches[Index]);
+  if (Config->Kernel.Patches != NULL)
+    FreePool(Config->Kernel.Patches);
   ZeroMem(Config, sizeof(*Config));
 }
 
@@ -78,6 +82,8 @@ AcConfigurationInit(IN CONST VOID *Buffer, IN UINTN BufferSize, OUT AC_GLOBAL_CO
         continue;
       if (AsciiStrCmp(Key, "UEFI") == 0)
         Status = InternalConfigurationParseUefi(Value, &Config->Uefi, &Issues);
+      else if (AsciiStrCmp(Key, "Kernel") == 0)
+        Status = InternalConfigurationParseKernel(Value, &Config->Kernel, &Issues);
       else
         InternalConfigurationIssue(&Issues, "", MAX_UINTN, Key, "unsupported key");
       if (EFI_ERROR(Status))
