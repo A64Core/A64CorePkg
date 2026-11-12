@@ -12,6 +12,7 @@
   Include
 
 [LibraryClasses]
+  AcAcpiLib|Include/Library/AcAcpiLib.h
   AcApfsLib|Include/Library/AcApfsLib.h
   AcAppleImg4Lib|Include/Library/AcAppleImg4Lib.h
   AcAppleKernelLib|Include/Library/AcAppleKernelLib.h

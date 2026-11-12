@@ -1,0 +1,30 @@
+## @file
+# Read-only firmware ACPI table access.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAcpiLib
+  FILE_GUID      = 414F983F-380B-441A-A27B-8156C11E2652
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAcpiLib
+
+[Sources]
+  AcAcpiLib.c
+  AcpiTable.c
+  AcpiInternal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+
+[Guids]
+  gEfiAcpi10TableGuid
+  gEfiAcpi20TableGuid
