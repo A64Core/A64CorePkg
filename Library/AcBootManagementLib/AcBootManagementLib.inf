@@ -18,6 +18,7 @@
   BootResources.c
   BootFile.c
   BootKernel.c
+  BootRecovery.c
 
 [Packages]
   MdePkg/MdePkg.dec

@@ -7,6 +7,7 @@
 
 #include <Library/AcBootManagementLib.h>
 #include <Library/AcAppleKernelLib.h>
+#include <Library/AcAppleImg4Lib.h>
 #include <Guid/FileInfo.h>
 #include <IndustryStandard/Apfs.h>
 #include <Protocol/AcApfsVolumeInfo.h>

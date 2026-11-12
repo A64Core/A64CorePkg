@@ -170,7 +170,10 @@ AcResolveBootResources(IN CONST AC_BOOT_ENTRY *Entry, OUT AC_BOOT_RESOURCES *Res
   Status = InternalOpenBootRoot(Entry, &Root, &Handle);
   if (EFI_ERROR(Status))
     return Status;
-  Status = InternalResolveBootResources(Root, Entry->DirectoryPath, Resources);
+  if (Entry->Type == AcBootEntryRecovery)
+    Status = InternalResolveRecoveryResources(Handle, Root, Entry->DirectoryPath, Resources);
+  else
+    Status = InternalResolveBootResources(Root, Entry->DirectoryPath, Resources);
   Root->Close(Root);
   return Status;
 }

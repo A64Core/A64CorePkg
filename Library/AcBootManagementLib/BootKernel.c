@@ -8,6 +8,37 @@
 #define AC_BOOT_KERNEL_DECODED_LIMIT (1024U * 1024U * 1024U)
 
 STATIC EFI_STATUS
+VerifyRecoveryManifest(EFI_FILE_PROTOCOL *Root, CONST AC_BOOT_RESOURCES *Resources,
+                       CONST VOID *Buffer, UINTN Size)
+{
+  AC_IMG4_MANIFEST Manifest;
+  AC_IMG4_MANIFEST TicketManifest;
+  VOID            *Ticket = NULL;
+  UINTN            TicketSize;
+  UINT8            Hash[48];
+  EFI_STATUS       Status;
+
+  Status = AcImg4GetManifest(Buffer, Size, &Manifest);
+  if (EFI_ERROR(Status))
+    return Status;
+  if (!Sha384HashAll(Manifest.Data, Manifest.Size, Hash))
+    return EFI_DEVICE_ERROR;
+  if (CompareMem(Hash, Resources->BootManifestHash, sizeof(Hash)) != 0)
+    return EFI_COMPROMISED_DATA;
+  Status =
+    InternalReadBootFile(Root, Resources->TicketPath, AC_BOOT_TICKET_LIMIT, &Ticket, &TicketSize);
+  if (!EFI_ERROR(Status))
+    Status = AcImg4GetManifest(Ticket, TicketSize, &TicketManifest);
+  if (!EFI_ERROR(Status) &&
+      (TicketManifest.Data != Ticket || TicketManifest.Size != TicketSize ||
+       TicketSize != Manifest.Size || CompareMem(Ticket, Manifest.Data, TicketSize) != 0))
+    Status = EFI_COMPROMISED_DATA;
+  if (Ticket != NULL)
+    FreePool(Ticket);
+  return Status;
+}
+
+STATIC EFI_STATUS
 ApplyPatches(IN CONST AC_KERNEL_CONFIG *Config, IN OUT AC_KERNEL_COLLECTION_CONTEXT *Collection,
              IN OUT AC_BOOT_KERNEL *Kernel, IN BOOLEAN KernelPhase)
 {
@@ -80,9 +111,18 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   Kernel->Stage = L"Read kernel file";
   Status =
     InternalReadBootFile(Root, Resources->KernelPath, AC_BOOT_KERNEL_FILE_LIMIT, &Buffer, &Size);
+  if (!EFI_ERROR(Status) && Entry->Type == AcBootEntryRecovery)
+  {
+    Kernel->Stage = L"Verify Recovery kernel manifest";
+    Status = VerifyRecoveryManifest(Root, Resources, Buffer, Size);
+  }
   Root->Close(Root);
   if (EFI_ERROR(Status))
+  {
+    if (Buffer != NULL)
+      FreePool(Buffer);
     return Status;
+  }
   Kernel->FileSize = Size;
   Capacity = Size == 0 ? 1 : Size;
   Kernel->Stage = L"Decode kernel payload";

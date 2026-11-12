@@ -306,7 +306,11 @@ AcScanBootEntries(OUT AC_BOOT_ENTRY **Entries, OUT UINTN *EntryCount)
   for (Index = 0; Index < VolumeCount; ++Index)
   {
     InitialCount = *EntryCount;
-    if (Volumes[Index].Identity.Role == APFS_VOLUME_ROLE_PREBOOT)
+    if (Volumes[Index].Identity.Role == APFS_VOLUME_ROLE_RECOVERY &&
+        CompareGuid(&Volumes[Index].PartitionType, &gAcBootApfsRecoveryPartitionType))
+      Status = InternalScanRecovery(&Volumes[Index], Entries, EntryCount);
+    else if (Volumes[Index].Identity.Role == APFS_VOLUME_ROLE_PREBOOT &&
+             !CompareGuid(&Volumes[Index].PartitionType, &gAcBootApfsIscPartitionType))
       Status = ScanPreboot(Volumes, VolumeCount, &Volumes[Index], Entries, EntryCount);
     else
       continue;

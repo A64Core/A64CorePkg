@@ -49,7 +49,7 @@ typedef struct
 } AC_BOOT_RESOURCES;
 
 /**
-  Scan connected APFS volumes for Preboot systems.
+  Scan connected APFS volumes for Preboot systems and independent Recovery sets.
 
   The caller owns the array and its members; release it with AcFreeBootEntries().
   No targets is success with NULL Entries and zero EntryCount. Unreadable sources
