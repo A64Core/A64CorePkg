@@ -66,8 +66,12 @@ AcRunBootPicker(IN EFI_HANDLE ImageHandle, IN CONST AC_GLOBAL_CONFIG *Config)
     }
     ResolveStatus = AcResolveBootResources(&Entries[Selected], &Resources);
     KernelStatus = EFI_NOT_STARTED;
+    if (!EFI_ERROR(ResolveStatus))
+      KernelStatus =
+        InternalLoadBootKernel(ImageHandle, &Entries[Selected], &Resources, Config, &Kernel);
     Status = InternalShowBootResources(Input, Output, &Entries[Selected], ResolveStatus, &Resources,
                                        KernelStatus, &Kernel);
+    InternalFreeBootKernel(&Kernel);
     AcFreeBootResources(&Resources);
     if (EFI_ERROR(Status))
       break;

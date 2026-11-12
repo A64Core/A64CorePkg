@@ -6,6 +6,7 @@
 #define BOOT_MANAGEMENT_INTERNAL_H
 
 #include <Library/AcBootManagementLib.h>
+#include <Library/AcAppleKernelLib.h>
 #include <Guid/FileInfo.h>
 #include <IndustryStandard/Apfs.h>
 #include <Protocol/AcApfsVolumeInfo.h>
@@ -65,8 +66,21 @@ InternalShowBootMenu(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *Input, EFI_SIMPLE_TEXT_OUTP
 
 typedef struct
 {
-  CONST CHAR16 *Stage;
+  UINTN                FileSize;
+  UINTN                BufferSize;
+  AC_KERNEL_IMAGE_INFO Image;
+  UINT32               EntryCount;
+  UINT32               DarwinVersion;
+  UINTN                PatchApplied;
+  UINTN                PatchFailed;
+  UINTN                PatchReplacements;
+  CONST CHAR16        *Stage;
 } AC_BOOT_KERNEL;
+
+EFI_STATUS InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
+                                  IN CONST AC_BOOT_RESOURCES *Resources,
+                                  IN CONST AC_GLOBAL_CONFIG *Config, OUT AC_BOOT_KERNEL *Kernel);
+VOID       InternalFreeBootKernel(IN OUT AC_BOOT_KERNEL *Kernel);
 
 EFI_STATUS
 InternalShowBootResources(EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *Input,

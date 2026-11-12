@@ -17,6 +17,7 @@
   BootScan.c
   BootResources.c
   BootFile.c
+  BootKernel.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -25,6 +26,7 @@
 
 [LibraryClasses]
   AcAppleKernelLib
+  AcAppleImg4Lib
   AcPlistLib
   BaseCryptLib
   BaseLib
