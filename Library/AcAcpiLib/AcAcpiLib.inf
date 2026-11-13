@@ -13,6 +13,9 @@
 [Sources]
   AcAcpiLib.c
   AcpiTable.c
+  AcpiMadt.c
+  AcpiGtdt.c
+  AcpiFadt.c
   AcpiInternal.h
 
 [Packages]
