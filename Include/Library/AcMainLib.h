@@ -28,6 +28,17 @@ EFI_STATUS AcLoadConfiguration(IN EFI_HANDLE ImageHandle, OUT AC_GLOBAL_CONFIG *
 EFI_STATUS
 AcLoadDrivers(IN EFI_HANDLE ImageHandle, IN CONST AC_GLOBAL_CONFIG *Config, IN BOOLEAN LoadEarly);
 
+/**
+  Apply NVRAM Delete then Add once, before ordinary drivers.
+
+  Existing additions are preserved; a matching Delete/Add value avoids a rewrite.
+  New variables use Boot Services and Runtime access without the NV attribute.
+  Individual firmware failures are reported and skipped. Allocation failure
+  aborts without undoing earlier variable operations. Config is borrowed and
+  must come from AcConfigurationInit().
+**/
+EFI_STATUS AcApplyNvram(IN CONST AC_GLOBAL_CONFIG *Config);
+
 /** Recursively connect device roots using the firmware's existing driver policy. **/
 EFI_STATUS AcConnectDrivers(VOID);
 

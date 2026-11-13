@@ -14,6 +14,7 @@
   A64CoreMisc.c
   A64CoreConfig.c
   A64CoreUefi.c
+  A64CoreNvram.c
   MainInternal.h
 
 [Packages]

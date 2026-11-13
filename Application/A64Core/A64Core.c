@@ -23,6 +23,10 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable)
   Status = AcLoadDrivers(ImageHandle, &Config, TRUE);
   if (EFI_ERROR(Status))
     goto Done;
+  Stage = L"Apply NVRAM configuration";
+  Status = AcApplyNvram(&Config);
+  if (EFI_ERROR(Status))
+    goto Done;
   Stage = L"Load ordinary drivers";
   Status = AcLoadDrivers(ImageHandle, &Config, FALSE);
   if (EFI_ERROR(Status))

@@ -54,8 +54,30 @@ typedef struct
 
 typedef struct
 {
+  EFI_GUID       Guid;
+  CHAR16        *Name;
+  AC_CONFIG_DATA Value;
+} AC_NVRAM_ADD_ENTRY;
+
+typedef struct
+{
+  EFI_GUID Guid;
+  CHAR16  *Name;
+} AC_NVRAM_DELETE_ENTRY;
+
+typedef struct
+{
+  UINTN                  AddCount;
+  AC_NVRAM_ADD_ENTRY    *Add;
+  UINTN                  DeleteCount;
+  AC_NVRAM_DELETE_ENTRY *Delete;
+} AC_NVRAM_CONFIG;
+
+typedef struct
+{
   AC_UEFI_CONFIG   Uefi;
   AC_KERNEL_CONFIG Kernel;
+  AC_NVRAM_CONFIG  Nvram;
 } AC_GLOBAL_CONFIG;
 
 /**

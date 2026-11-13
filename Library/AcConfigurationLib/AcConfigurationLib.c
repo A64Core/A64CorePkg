@@ -43,6 +43,7 @@ AcConfigurationFree(IN OUT AC_GLOBAL_CONFIG *Config OPTIONAL)
     InternalConfigurationFreePatch(&Config->Kernel.Patches[Index]);
   if (Config->Kernel.Patches != NULL)
     FreePool(Config->Kernel.Patches);
+  InternalConfigurationFreeNvram(&Config->Nvram);
   ZeroMem(Config, sizeof(*Config));
 }
 
@@ -84,6 +85,8 @@ AcConfigurationInit(IN CONST VOID *Buffer, IN UINTN BufferSize, OUT AC_GLOBAL_CO
         Status = InternalConfigurationParseUefi(Value, &Config->Uefi, &Issues);
       else if (AsciiStrCmp(Key, "Kernel") == 0)
         Status = InternalConfigurationParseKernel(Value, &Config->Kernel, &Issues);
+      else if (AsciiStrCmp(Key, "NVRAM") == 0)
+        Status = InternalConfigurationParseNvram(Value, &Config->Nvram, &Issues);
       else
         InternalConfigurationIssue(&Issues, "", MAX_UINTN, Key, "unsupported key");
       if (EFI_ERROR(Status))
