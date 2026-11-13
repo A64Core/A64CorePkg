@@ -1,0 +1,25 @@
+## @file
+# Mutable Apple Device Tree construction and serialization.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAppleAdtLib
+  FILE_GUID      = D6113053-7616-456E-9E95-E705CA93BA74
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAppleAdtLib
+
+[Sources]
+  AcAppleAdtLib.c
+  AdtSerialize.c
+  AdtInternal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
