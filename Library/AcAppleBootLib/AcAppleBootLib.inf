@@ -1,0 +1,30 @@
+## @file
+# Apple kernel boot memory and argument preparation.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAppleBootLib
+  FILE_GUID      = 439F6B1C-1C5F-4816-953A-6C722FC4ED16
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAppleBootLib|UEFI_APPLICATION
+
+[Sources]
+  AcAppleBootLib.c
+  BootMemory.c
+  BootArgs.c
+  BootTrustCache.c
+  BootInternal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  AcAppleKernelLib
+  AcAppleAdtLib
+  BaseLib
+  BaseMemoryLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
