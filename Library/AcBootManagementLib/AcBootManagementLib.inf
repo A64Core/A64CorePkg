@@ -20,6 +20,7 @@
   BootKernel.c
   BootRecovery.c
   BootPlatform.c
+  BootDeviceTree.c
 
 [Packages]
   MdePkg/MdePkg.dec
