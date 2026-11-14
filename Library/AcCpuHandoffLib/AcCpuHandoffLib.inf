@@ -1,0 +1,34 @@
+## @file
+# Configured AArch64 CPU handoff library.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcCpuHandoffLib
+  FILE_GUID      = 36A1C887-F815-4E3B-8268-51699582B116
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcCpuHandoffLib|UEFI_APPLICATION
+
+[Sources]
+  AcCpuHandoffLib.c
+  HandoffInternal.h
+  AArch64/Handoff.S
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  CacheMaintenanceLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
+
+[Guids]
+  gEfiFileInfoGuid

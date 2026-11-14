@@ -21,6 +21,7 @@
   AcBootManagementLib|Include/Library/AcBootManagementLib.h
   AcCompressionLib|Include/Library/AcCompressionLib.h
   AcConfigurationLib|Include/Library/AcConfigurationLib.h
+  AcCpuHandoffLib|Include/Library/AcCpuHandoffLib.h
   AcMainLib|Include/Library/AcMainLib.h
   AcPlistLib|Include/Library/AcPlistLib.h
 

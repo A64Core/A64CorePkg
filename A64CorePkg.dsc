@@ -24,6 +24,7 @@
   AcBootManagementLib|A64CorePkg/Library/AcBootManagementLib/AcBootManagementLib.inf
   AcCompressionLib|A64CorePkg/Library/AcCompressionLib/AcCompressionLib.inf
   AcConfigurationLib|A64CorePkg/Library/AcConfigurationLib/AcConfigurationLib.inf
+  AcCpuHandoffLib|A64CorePkg/Library/AcCpuHandoffLib/AcCpuHandoffLib.inf
   AcMainLib|A64CorePkg/Library/AcMainLib/AcMainLib.inf
   AcPlistLib|A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
@@ -62,3 +63,4 @@
   A64CorePkg/Library/AcAppleAdtLib/AcAppleAdtLib.inf
   A64CorePkg/Library/AcAppleBootLib/AcAppleBootLib.inf
   A64CorePkg/Platform/AcApfsDxe/AcApfsDxe.inf
+  A64CorePkg/Library/AcCpuHandoffLib/AcCpuHandoffLib.inf

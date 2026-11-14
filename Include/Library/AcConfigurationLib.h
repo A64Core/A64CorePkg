@@ -91,9 +91,21 @@ typedef struct
   UINT32              Rotation;
 } AC_FRAMEBUFFER_CONFIG;
 
+typedef enum
+{
+  AcCpuHandoffDirect,
+  AcCpuHandoffInvalid
+} AC_CPU_HANDOFF_MODE;
+
+typedef struct
+{
+  AC_CPU_HANDOFF_MODE Mode;
+} AC_CPU_HANDOFF_CONFIG;
+
 typedef struct
 {
   AC_FRAMEBUFFER_CONFIG Framebuffer;
+  AC_CPU_HANDOFF_CONFIG CpuHandoff;
 } AC_PLATFORM_CONFIG;
 
 typedef struct

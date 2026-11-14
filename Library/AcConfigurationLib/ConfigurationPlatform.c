@@ -4,6 +4,40 @@
 
 #include "ConfigurationInternal.h"
 
+STATIC EFI_STATUS
+ParseCpuHandoff(CONST AC_PLIST_NODE *Node, AC_CPU_HANDOFF_CONFIG *Handoff, UINTN *Issues)
+{
+  CONST AC_PLIST_NODE *Value;
+  CONST CHAR8         *Key;
+  CONST CHAR8         *Text;
+
+  if (AcPlistGetType(Node) != AcPlistTypeDictionary)
+  {
+    InternalConfigurationIssue(Issues, "Platform.", MAX_UINTN, "CpuHandoff",
+                               "expected a dictionary");
+    Handoff->Mode = AcCpuHandoffInvalid;
+    return EFI_SUCCESS;
+  }
+  for (UINTN Index = 0; Index < AcPlistGetCount(Node); ++Index)
+  {
+    AcPlistGetDictionaryItem(Node, Index, &Key, &Value);
+    if (Key[0] == '#')
+      continue;
+    if (AsciiStrCmp(Key, "Mode") == 0)
+    {
+      Text = AcPlistGetString(Value);
+      if (Text == NULL || AsciiStrCmp(Text, "Direct") != 0)
+      {
+        InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, Key, "invalid mode");
+        Handoff->Mode = AcCpuHandoffInvalid;
+      }
+    }
+    else
+      InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, Key, "unsupported key");
+  }
+  return EFI_SUCCESS;
+}
+
 STATIC VOID
 ParseFramebuffer(CONST AC_PLIST_NODE *Node, AC_FRAMEBUFFER_CONFIG *Framebuffer, UINTN *Issues)
 {
@@ -135,6 +169,7 @@ InternalConfigurationParsePlatform(IN CONST AC_PLIST_NODE    *Node,
   {
     InternalConfigurationIssue(IssueCount, "", MAX_UINTN, "Platform", "expected a dictionary");
     Platform->Framebuffer.Mode = AcFramebufferInvalid;
+    Platform->CpuHandoff.Mode = AcCpuHandoffInvalid;
     return EFI_SUCCESS;
   }
   for (UINTN Index = 0; Index < AcPlistGetCount(Node); ++Index)
@@ -144,6 +179,12 @@ InternalConfigurationParsePlatform(IN CONST AC_PLIST_NODE    *Node,
       continue;
     if (AsciiStrCmp(Key, "Framebuffer") == 0)
       ParseFramebuffer(Value, &Platform->Framebuffer, IssueCount);
+    else if (AsciiStrCmp(Key, "CpuHandoff") == 0)
+    {
+      EFI_STATUS Status = ParseCpuHandoff(Value, &Platform->CpuHandoff, IssueCount);
+      if (EFI_ERROR(Status))
+        return Status;
+    }
     else
       InternalConfigurationIssue(IssueCount, "Platform.", MAX_UINTN, Key, "unsupported key");
   }
