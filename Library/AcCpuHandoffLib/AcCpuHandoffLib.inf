@@ -13,6 +13,7 @@
 [Sources]
   AcCpuHandoffLib.c
   HandoffInternal.h
+  SecureLaunch.c
   AArch64/Handoff.S
 
 [Packages]
@@ -32,3 +33,6 @@
 
 [Guids]
   gEfiFileInfoGuid
+
+[BuildOptions]
+  GCC:*_*_AARCH64_CC_FLAGS = -I$(WORKSPACE)/A64CorePkg/Library/AcCpuHandoffLib/Compat -I$(WORKSPACE)/A64CorePkg/ThirdParty/slbounce/src

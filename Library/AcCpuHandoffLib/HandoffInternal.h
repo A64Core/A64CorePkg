@@ -35,6 +35,15 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
+typedef struct
+{
+  EFI_PHYSICAL_ADDRESS Image;
+  UINTN                ImagePages;
+  EFI_PHYSICAL_ADDRESS Shared;
+  UINTN                SharedPages;
+  EFI_PHYSICAL_ADDRESS BootParameters;
+} AC_SECURE_LAUNCH;
+
 struct AC_CPU_HANDOFF_CONTEXT
 {
   UINT64               Entry;
@@ -50,6 +59,7 @@ struct AC_CPU_HANDOFF_CONTEXT
   UINT64               RowBytes;
   AC_CPU_HANDOFF_MODE  Mode;
   EFI_PHYSICAL_ADDRESS Code;
+  AC_SECURE_LAUNCH     SecureLaunch;
 };
 
 STATIC_ASSERT(sizeof(AC_CPU_HANDOFF_CONTEXT) <= EFI_PAGE_SIZE, "Context overlaps the stack");
@@ -71,6 +81,12 @@ AC_CHECK_HANDOFF(RowBytes, AC_HANDOFF_ROW_BYTES);
 
 extern CONST UINT8 AcHandoffCodeStart[], AcHandoffCodeEnd[], AcHandoffStart[], AcHandoffDirect[];
 extern CONST UINT8 AcHandoffAbort[], AcHandoffContextSlot[];
+
+EFI_STATUS    InternalPrepareSecureLaunch(EFI_HANDLE ImageHandle, CONST CHAR8 *Path,
+                                          AC_CPU_HANDOFF_CONTEXT *Context);
+VOID          InternalFreeSecureLaunch(AC_SECURE_LAUNCH *Launch);
+VOID EFIAPI   InternalExecuteSecureLaunch(AC_CPU_HANDOFF_CONTEXT *Context);
+UINT64 EFIAPI InternalHandoffSmc(UINT64 Function, UINT64 Parameters, UINT64 Command);
 
 STATIC inline VOID *
 InternalHandoffCode(CONST AC_CPU_HANDOFF_CONTEXT *Context, CONST UINT8 *Label)

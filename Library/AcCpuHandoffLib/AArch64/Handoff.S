@@ -1,4 +1,4 @@
-// Position-independent EL1 CPU handoff.
+// Position-independent EL1 entry and Slbounce EL2 transition.
 #include "../HandoffInternal.h"
 
 .text
@@ -10,6 +10,54 @@
 .global AcHandoffAbort
 .global AcHandoffContextSlot
 AcHandoffCodeStart:
+    hint    #38
+    // Slbounce enters at EL1 with x0 pointing to sl_tb_data.
+    mov     x9, x0
+    hvc     #1
+    msr     daifset, #15
+    dsb     sy
+    mrs     x10, sctlr_el2
+    bic     x10, x10, #1
+    bic     x10, x10, #4
+    bic     x10, x10, #0x1000
+    msr     sctlr_el2, x10
+    isb
+    ldr     x19, [x9]
+    msr     spsel, #1
+    ldr     x10, [x19, #AC_HANDOFF_STACK]
+    mov     sp, x10
+    adr     x10, AcHandoffVectors2
+    msr     vbar_el2, x10
+    mov     x10, #AC_HANDOFF_STAGE_EL2
+    str     x10, [x19, #AC_HANDOFF_STAGE]
+    // HCR_EL2.RW, API and APK; no VHE or stage-2 translation.
+    mov     x10, #(1 << 31)
+    orr     x10, x10, #(1 << 40)
+    orr     x10, x10, #(1 << 41)
+    msr     hcr_el2, x10
+    isb
+    mov     x10, #3
+    msr     cnthctl_el2, x10
+    msr     cntvoff_el2, xzr
+    msr     hstr_el2, xzr
+    msr     vttbr_el2, xzr
+    mov     x10, #0x33ff
+    msr     cptr_el2, x10
+    mrs     x10, sctlr_el1
+    bic     x10, x10, #1
+    bic     x10, x10, #4
+    bic     x10, x10, #0x1000
+    msr     sctlr_el1, x10
+    ldr     x10, [x19, #AC_HANDOFF_STACK]
+    msr     sp_el1, x10
+    adr     x10, AcHandoffEl1
+    msr     elr_el2, x10
+    mov     x10, #0x3c5
+    msr     spsr_el2, x10
+    dsb     sy
+    isb
+    eret
+
 AcHandoffStart:
     hint    #38
     msr     daifset, #15
@@ -121,6 +169,19 @@ AcHandoffException1:
     msr     sctlr_el1, x10
     isb
     b       AcHandoffException
+AcHandoffException2:
+    msr     daifset, #15
+    mrs     x1, esr_el2
+    mrs     x2, elr_el2
+    mrs     x3, far_el2
+    mov     x4, #2
+    mrs     x10, sctlr_el2
+    bic     x10, x10, #1
+    bic     x10, x10, #4
+    bic     x10, x10, #0x1000
+    dsb     sy
+    msr     sctlr_el2, x10
+    isb
 AcHandoffException:
     adr     x19, AcHandoffContextSlot
     ldr     x19, [x19]
@@ -135,6 +196,13 @@ AcHandoffVectors1:
     b       AcHandoffException1
     .space  124
 .endr
+.balign 2048
+AcHandoffVectors2:
+.rept 16
+    b       AcHandoffException2
+    .space  124
+.endr
+
 AcHandoffRender:
     // Six hexadecimal rows: stage, status, exception EL, ESR, ELR and FAR.
     ldr     x20, [x19, #AC_HANDOFF_FRAME]
@@ -209,3 +277,15 @@ AcHandoffHex:
 AcHandoffContextSlot:
     .quad 0
 AcHandoffCodeEnd:
+
+.global InternalHandoffSmc
+InternalHandoffSmc:
+    hint    #34
+    mov     x3, xzr
+    mov     x4, xzr
+    mov     x5, xzr
+    mov     x6, xzr
+    mov     x7, xzr
+    dsb     sy
+    smc     #0
+    ret

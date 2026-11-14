@@ -13,6 +13,7 @@ AcCpuHandoffFree(IN AC_CPU_HANDOFF_CONTEXT *Context OPTIONAL)
 {
   if (Context == NULL)
     return;
+  InternalFreeSecureLaunch(&Context->SecureLaunch);
   if (Context->Code != 0)
     (VOID) gBS->FreePages(Context->Code, AC_HANDOFF_CODE_PAGES);
   (VOID) gBS->FreePages((EFI_PHYSICAL_ADDRESS)(UINTN)Context, AC_HANDOFF_DATA_PAGES);
@@ -31,7 +32,8 @@ AcCpuHandoffPrepare(IN EFI_HANDLE ImageHandle, IN CONST AC_CPU_HANDOFF_CONFIG *C
   if (Context == NULL)
     return EFI_INVALID_PARAMETER;
   *Context = NULL;
-  if (Config == NULL || Config->Mode != AcCpuHandoffDirect)
+  if (Config == NULL ||
+      (Config->Mode != AcCpuHandoffDirect && Config->Mode != AcCpuHandoffSecureLaunch))
     return EFI_INVALID_PARAMETER;
   if (CodeSize == 0 || CodeSize > EFI_PAGES_TO_SIZE(AC_HANDOFF_CODE_PAGES))
     return EFI_BAD_BUFFER_SIZE;
@@ -62,6 +64,8 @@ AcCpuHandoffPrepare(IN EFI_HANDLE ImageHandle, IN CONST AC_CPU_HANDOFF_CONFIG *C
     WriteBackDataCacheRange((VOID *)(UINTN)Address, EFI_PAGES_TO_SIZE(AC_HANDOFF_CODE_PAGES));
     InvalidateInstructionCacheRange((VOID *)(UINTN)Address,
                                     EFI_PAGES_TO_SIZE(AC_HANDOFF_CODE_PAGES));
+    if (Config->Mode == AcCpuHandoffSecureLaunch)
+      Status = InternalPrepareSecureLaunch(ImageHandle, Config->TcbPath, Result);
   }
   if (EFI_ERROR(Status))
   {
@@ -85,7 +89,13 @@ AcCpuHandoffAbort(IN AC_CPU_HANDOFF_CONTEXT *Context, IN EFI_STATUS Status)
 STATIC VOID EFIAPI
 ExecuteHandoff(AC_CPU_HANDOFF_CONTEXT *Context)
 {
-  ((AC_HANDOFF_ROUTINE)InternalHandoffCode(Context, AcHandoffDirect))(Context);
+  if (Context->Mode == AcCpuHandoffSecureLaunch)
+  {
+    InternalExecuteSecureLaunch(Context);
+    AcCpuHandoffAbort(Context, EFI_ABORTED);
+  }
+  else
+    ((AC_HANDOFF_ROUTINE)InternalHandoffCode(Context, AcHandoffDirect))(Context);
   AcCpuHandoffAbort(Context, EFI_ABORTED);
 }
 

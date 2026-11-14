@@ -10,6 +10,8 @@ ParseCpuHandoff(CONST AC_PLIST_NODE *Node, AC_CPU_HANDOFF_CONFIG *Handoff, UINTN
   CONST AC_PLIST_NODE *Value;
   CONST CHAR8         *Key;
   CONST CHAR8         *Text;
+  UINTN                Size;
+  BOOLEAN              Valid = TRUE;
 
   if (AcPlistGetType(Node) != AcPlistTypeDictionary)
   {
@@ -26,15 +28,44 @@ ParseCpuHandoff(CONST AC_PLIST_NODE *Node, AC_CPU_HANDOFF_CONFIG *Handoff, UINTN
     if (AsciiStrCmp(Key, "Mode") == 0)
     {
       Text = AcPlistGetString(Value);
-      if (Text == NULL || AsciiStrCmp(Text, "Direct") != 0)
+      if (Text != NULL && AsciiStrCmp(Text, "Direct") == 0)
+        Handoff->Mode = AcCpuHandoffDirect;
+      else if (Text != NULL && AsciiStrCmp(Text, "SecureLaunch") == 0)
+        Handoff->Mode = AcCpuHandoffSecureLaunch;
+      else
       {
         InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, Key, "invalid mode");
-        Handoff->Mode = AcCpuHandoffInvalid;
+        Valid = FALSE;
       }
+    }
+    else if (AsciiStrCmp(Key, "TCBPath") == 0)
+    {
+      Text = AcPlistGetString(Value);
+      if (Text == NULL)
+      {
+        InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, Key,
+                                   "expected a string");
+        Valid = FALSE;
+        continue;
+      }
+      Size = AsciiStrLen(Text) + 1;
+      Handoff->TcbPath = AllocateZeroPool(Size);
+      if (Handoff->TcbPath == NULL)
+        return EFI_OUT_OF_RESOURCES;
+      CopyMem(Handoff->TcbPath, Text, Size);
     }
     else
       InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, Key, "unsupported key");
   }
+  if (Handoff->Mode == AcCpuHandoffSecureLaunch &&
+      (Handoff->TcbPath == NULL || Handoff->TcbPath[0] == '\0'))
+  {
+    InternalConfigurationIssue(Issues, "Platform.CpuHandoff.", MAX_UINTN, "TCBPath",
+                               "SecureLaunch requires a path");
+    Valid = FALSE;
+  }
+  if (!Valid)
+    Handoff->Mode = AcCpuHandoffInvalid;
   return EFI_SUCCESS;
 }
 

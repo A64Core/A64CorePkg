@@ -94,12 +94,14 @@ typedef struct
 typedef enum
 {
   AcCpuHandoffDirect,
+  AcCpuHandoffSecureLaunch,
   AcCpuHandoffInvalid
 } AC_CPU_HANDOFF_MODE;
 
 typedef struct
 {
   AC_CPU_HANDOFF_MODE Mode;
+  CHAR8              *TcbPath;
 } AC_CPU_HANDOFF_CONFIG;
 
 typedef struct
@@ -132,6 +134,20 @@ typedef struct
   failure is fatal. On failure Config is cleared; no partial configuration is
   returned. Buffer can be released as soon as this function returns.
 
+  Kernel.Patch owns its strings and decoded Data. Version bounds are parsed
+  from one to three decimal components in 0..99; omitted components are zero.
+  Empty bounds mean unrestricted. Counts must fit UINT32. Invalid patch entries
+  are diagnosed and disabled in place, retaining their source indices.
+
+  NVRAM owns flattened GUID/name entries and encoded values in source order.
+  Data is copied, strings include NUL, integers use four little-endian bytes,
+  and booleans use one byte. Invalid entries are diagnosed and skipped.
+  Framebuffer defaults to Auto. Override requires Address, Size, Width, Height,
+  RowBytes, PixelFormat (BGRX8), and Rotation (0/90/180/270). Invalid framebuffer
+  fields leave Mode Invalid so boot preparation cannot silently use Auto.
+  CpuHandoff defaults to Direct. SecureLaunch requires an ASCII TCBPath relative to
+  EFI\AC on the application's source partition. Both paths enter from EL1;
+  the selected mode is executed without hardware probing or fallback.
 **/
 EFI_STATUS
 AcConfigurationInit(IN CONST VOID *Buffer, IN UINTN BufferSize, OUT AC_GLOBAL_CONFIG *Config,

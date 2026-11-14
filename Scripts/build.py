@@ -144,6 +144,7 @@ def main() -> int:
         environment = check_environment()
         print("Checking submodules...", flush=True)
         check_submodule(root, "ThirdParty/edk2")
+        check_submodule(root, "ThirdParty/slbounce")
         # BaseTools needs Brotli; MdePkg.dec exposes MIPI Sys-T headers.
         check_submodule(workspace, "BaseTools", recursive=True)
         check_submodule(workspace, "MdePkg/Library/MipiSysTLib/mipisyst", recursive=True)

@@ -44,6 +44,8 @@ AcConfigurationFree(IN OUT AC_GLOBAL_CONFIG *Config OPTIONAL)
   if (Config->Kernel.Patches != NULL)
     FreePool(Config->Kernel.Patches);
   InternalConfigurationFreeNvram(&Config->Nvram);
+  if (Config->Platform.CpuHandoff.TcbPath != NULL)
+    FreePool(Config->Platform.CpuHandoff.TcbPath);
   ZeroMem(Config, sizeof(*Config));
 }
 
