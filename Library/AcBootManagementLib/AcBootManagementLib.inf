@@ -19,6 +19,7 @@
   BootFile.c
   BootKernel.c
   BootRecovery.c
+  BootPlatform.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -26,6 +27,9 @@
   A64CorePkg/A64CorePkg.dec
 
 [LibraryClasses]
+  AcAppleBootLib
+  AcAcpiLib
+  AcAppleAdtLib
   AcAppleKernelLib
   AcAppleImg4Lib
   AcPlistLib

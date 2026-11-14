@@ -87,6 +87,8 @@ AcConfigurationInit(IN CONST VOID *Buffer, IN UINTN BufferSize, OUT AC_GLOBAL_CO
         Status = InternalConfigurationParseKernel(Value, &Config->Kernel, &Issues);
       else if (AsciiStrCmp(Key, "NVRAM") == 0)
         Status = InternalConfigurationParseNvram(Value, &Config->Nvram, &Issues);
+      else if (AsciiStrCmp(Key, "Platform") == 0)
+        Status = InternalConfigurationParsePlatform(Value, &Config->Platform, &Issues);
       else
         InternalConfigurationIssue(&Issues, "", MAX_UINTN, Key, "unsupported key");
       if (EFI_ERROR(Status))

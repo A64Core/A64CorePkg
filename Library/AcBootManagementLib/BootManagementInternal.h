@@ -7,7 +7,9 @@
 
 #include <Library/AcBootManagementLib.h>
 #include <Library/AcAppleKernelLib.h>
+#include <Library/AcAppleBootLib.h>
 #include <Library/AcAppleImg4Lib.h>
+#include <Library/AcAcpiLib.h>
 #include <Guid/FileInfo.h>
 #include <IndustryStandard/Apfs.h>
 #include <Protocol/AcApfsVolumeInfo.h>
@@ -60,28 +62,60 @@ typedef enum
   AcBootMenuReboot
 } AC_BOOT_MENU_ACTION;
 
-EFI_STATUS
-InternalShowBootMenu(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *Input, EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Output,
-                     CONST AC_BOOT_ENTRY *Entries, UINTN EntryCount, BOOLEAN ResetReturned,
-                     OUT AC_BOOT_MENU_ACTION *Action, OUT UINTN *SelectedIndex);
+typedef struct
+{
+  AC_ACPI_MADT_INFO   Madt;
+  UINT64              BootMpidr;
+  UINT32              CounterFrequency;
+  UINTN               EnabledCpuCount;
+  AC_APPLE_BOOT_VIDEO Video;
+  UINT64              FramebufferSize;
+  CHAR8               CommandLine[AC_APPLE_BOOT_LINE_LENGTH];
+  UINT8               RandomSeed[256];
+} AC_BOOT_PLATFORM;
 
 typedef struct
 {
-  UINTN                FileSize;
-  UINTN                BufferSize;
-  AC_KERNEL_IMAGE_INFO Image;
-  UINT32               EntryCount;
-  UINT32               DarwinVersion;
-  UINTN                PatchApplied;
-  UINTN                PatchFailed;
-  UINTN                PatchReplacements;
-  CONST CHAR16        *Stage;
+  UINTN                  FileSize;
+  UINTN                  BufferSize;
+  AC_KERNEL_IMAGE_INFO   Image;
+  AC_APPLE_BOOT_CONTEXT *BootContext;
+  UINT32                 EntryCount;
+  UINT32                 DarwinVersion;
+  UINTN                  PatchApplied;
+  UINTN                  PatchFailed;
+  UINTN                  PatchReplacements;
+  AC_APPLE_BOOT_VIDEO    Video;
+  UINT64                 BootMpidr;
+  UINTN                  EnabledCpuCount;
+  UINT32                 CounterFrequency;
+  CHAR8                  CommandLine[AC_APPLE_BOOT_LINE_LENGTH];
+  CONST CHAR16          *Stage;
 } AC_BOOT_KERNEL;
 
 EFI_STATUS InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
                                   IN CONST AC_BOOT_RESOURCES *Resources,
                                   IN CONST AC_GLOBAL_CONFIG *Config, OUT AC_BOOT_KERNEL *Kernel);
-VOID       InternalFreeBootKernel(IN OUT AC_BOOT_KERNEL *Kernel);
+
+VOID InternalFreeBootKernel(IN OUT AC_BOOT_KERNEL *Kernel);
+
+EFI_STATUS InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG *Framebuffer,
+                                    OUT AC_BOOT_PLATFORM *Platform, OUT CONST CHAR16 **Stage);
+
+VOID InternalFreeBootPlatform(IN OUT AC_BOOT_PLATFORM *Platform);
+
+EFI_STATUS InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY     *Entry,
+                                        IN CONST AC_BOOT_RESOURCES *Resources,
+                                        IN CONST AC_BOOT_PLATFORM  *Platform,
+                                        IN BOOLEAN HasTrustCache, OUT AC_APPLE_ADT_TREE **Tree);
+
+EFI_STATUS InternalUpdateBootDeviceTree(IN OUT AC_APPLE_ADT_TREE    *Tree,
+                                        IN CONST AC_APPLE_BOOT_INFO *Info);
+
+EFI_STATUS
+InternalShowBootMenu(EFI_SIMPLE_TEXT_INPUT_PROTOCOL *Input, EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *Output,
+                     CONST AC_BOOT_ENTRY *Entries, UINTN EntryCount, BOOLEAN ResetReturned,
+                     OUT AC_BOOT_MENU_ACTION *Action, OUT UINTN *SelectedIndex);
 
 EFI_STATUS
 InternalShowBootResources(EFI_SIMPLE_TEXT_INPUT_PROTOCOL  *Input,

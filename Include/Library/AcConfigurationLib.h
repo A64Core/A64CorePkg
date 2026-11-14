@@ -73,11 +73,35 @@ typedef struct
   AC_NVRAM_DELETE_ENTRY *Delete;
 } AC_NVRAM_CONFIG;
 
+typedef enum
+{
+  AcFramebufferAuto,
+  AcFramebufferOverride,
+  AcFramebufferInvalid
+} AC_FRAMEBUFFER_MODE;
+
 typedef struct
 {
-  AC_UEFI_CONFIG   Uefi;
-  AC_KERNEL_CONFIG Kernel;
-  AC_NVRAM_CONFIG  Nvram;
+  AC_FRAMEBUFFER_MODE Mode;
+  UINT64              Address;
+  UINT64              Size;
+  UINT32              Width;
+  UINT32              Height;
+  UINT32              RowBytes;
+  UINT32              Rotation;
+} AC_FRAMEBUFFER_CONFIG;
+
+typedef struct
+{
+  AC_FRAMEBUFFER_CONFIG Framebuffer;
+} AC_PLATFORM_CONFIG;
+
+typedef struct
+{
+  AC_UEFI_CONFIG     Uefi;
+  AC_KERNEL_CONFIG   Kernel;
+  AC_NVRAM_CONFIG    Nvram;
+  AC_PLATFORM_CONFIG Platform;
 } AC_GLOBAL_CONFIG;
 
 /**

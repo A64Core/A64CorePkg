@@ -15,6 +15,7 @@
   ConfigurationUefi.c
   ConfigurationKernel.c
   ConfigurationNvram.c
+  ConfigurationPlatform.c
   ConfigurationInternal.h
 
 [Packages]
