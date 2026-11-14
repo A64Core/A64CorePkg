@@ -51,16 +51,15 @@
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
 
 [Components]
-  A64CorePkg/Application/Bootstrap/Bootstrap.inf
-  A64CorePkg/Application/A64Core/A64Core.inf
-  A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
-  A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
-  A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
-  A64CorePkg/Library/AcConfigurationLib/AcConfigurationLib.inf
-  A64CorePkg/Library/AcAppleImg4Lib/AcAppleImg4Lib.inf
-  A64CorePkg/Library/AcCompressionLib/AcCompressionLib.inf
   A64CorePkg/Library/AcAcpiLib/AcAcpiLib.inf
+  A64CorePkg/Library/AcApfsLib/AcApfsLib.inf
   A64CorePkg/Library/AcAppleAdtLib/AcAppleAdtLib.inf
   A64CorePkg/Library/AcAppleBootLib/AcAppleBootLib.inf
+  A64CorePkg/Library/AcAppleImg4Lib/AcAppleImg4Lib.inf
+  A64CorePkg/Library/AcCompressionLib/AcCompressionLib.inf
+  A64CorePkg/Library/AcPlistLib/AcPlistLib.inf
+  A64CorePkg/Library/AcConfigurationLib/AcConfigurationLib.inf
+  A64CorePkg/Application/Bootstrap/Bootstrap.inf
+  A64CorePkg/Application/A64Core/A64Core.inf
+  A64CorePkg/Library/AcAppleKernelLib/AcAppleKernelLib.inf
   A64CorePkg/Platform/AcApfsDxe/AcApfsDxe.inf
-  A64CorePkg/Library/AcCpuHandoffLib/AcCpuHandoffLib.inf

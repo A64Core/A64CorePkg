@@ -34,12 +34,32 @@ def main() -> int:
         return 1
 
     library_root = root / "Library"
+    apfs_sources = [
+        library_root / "AcApfsLib" / name for name in (
+            "ApfsObject.c", "ApfsContainer.c", "ApfsBtree.c", "ApfsObjectMap.c", "ApfsVolume.c",
+            "ApfsInode.c", "ApfsDirectory.c", "ApfsFile.c", "ApfsName.c",
+        )
+    ]
+    plist_sources = [
+        library_root / "AcPlistLib" / name for name in ("AcPlistLib.c", "PlistParser.c", "PlistValue.c")
+    ]
     suites = [
-        ("AcAppleKernelLib", "PatchTests.c", [library_root / "AcAppleKernelLib" / "KernelReader.c", library_root / "AcAppleKernelLib" / "KernelCollection.c", library_root / "AcAppleKernelLib" / "KernelVersion.c", library_root / "AcAppleKernelLib" / "KextPatcher.c"]),
-        ("AcApfsLib", "ContainerTests.c", [library_root / "AcApfsLib" / "ApfsName.c", library_root / "AcApfsLib" / "ApfsObject.c", library_root / "AcApfsLib" / "ApfsContainer.c", library_root / "AcApfsLib" / "ApfsBtree.c", library_root / "AcApfsLib" / "ApfsObjectMap.c", library_root / "AcApfsLib" / "ApfsVolume.c", library_root / "AcApfsLib" / "ApfsDirectory.c", library_root / "AcApfsLib" / "ApfsFile.c", library_root / "AcApfsLib" / "ApfsInode.c"]),
-        ("AcApfsLib", "FileTests.c", [library_root / "AcApfsLib" / "ApfsName.c", library_root / "AcApfsLib" / "ApfsObject.c", library_root / "AcApfsLib" / "ApfsContainer.c", library_root / "AcApfsLib" / "ApfsBtree.c", library_root / "AcApfsLib" / "ApfsObjectMap.c", library_root / "AcApfsLib" / "ApfsVolume.c", library_root / "AcApfsLib" / "ApfsDirectory.c", library_root / "AcApfsLib" / "ApfsFile.c", library_root / "AcApfsLib" / "ApfsInode.c"]),
-        ("AcPlistLib", "PlistTests.c", [library_root / "AcPlistLib" / "AcPlistLib.c", library_root / "AcPlistLib" / "PlistParser.c", library_root / "AcPlistLib" / "PlistValue.c"]),
-        ("AcConfigurationLib", "ConfigurationTests.c", [library_root / "AcConfigurationLib" / "AcConfigurationLib.c", library_root / "AcConfigurationLib" / "ConfigurationUefi.c", library_root / "AcConfigurationLib" / "ConfigurationKernel.c", library_root / "AcConfigurationLib" / "ConfigurationNvram.c", library_root / "AcConfigurationLib" / "ConfigurationPlatform.c", library_root / "AcPlistLib" / "AcPlistLib.c", library_root / "AcPlistLib" / "PlistParser.c", library_root / "AcPlistLib" / "PlistValue.c"]),
+        ("AcAppleKernelLib", "PatchTests.c", [
+            library_root / "AcAppleKernelLib" / name for name in (
+                "KernelReader.c", "KernelCollection.c", "KernelVersion.c", "KextPatcher.c",
+            )
+        ]),
+        ("AcApfsLib", "ContainerTests.c", apfs_sources),
+        ("AcApfsLib", "FileTests.c", apfs_sources),
+        ("AcPlistLib", "PlistTests.c", plist_sources),
+        ("AcConfigurationLib", "ConfigurationTests.c", [
+            library_root / "AcConfigurationLib" / "AcConfigurationLib.c",
+            library_root / "AcConfigurationLib" / "ConfigurationUefi.c",
+            library_root / "AcConfigurationLib" / "ConfigurationKernel.c",
+            library_root / "AcConfigurationLib" / "ConfigurationNvram.c",
+            library_root / "AcConfigurationLib" / "ConfigurationPlatform.c",
+            *plist_sources,
+        ]),
     ]
     try:
         with tempfile.TemporaryDirectory(prefix="a64core-tests-") as directory:

@@ -8,6 +8,7 @@
 #include <Library/AcBootManagementLib.h>
 #include <Library/AcAppleKernelLib.h>
 #include <Library/AcAppleBootLib.h>
+#include <Library/AcCpuHandoffLib.h>
 #include <Library/AcAppleImg4Lib.h>
 #include <Library/AcAcpiLib.h>
 #include <Guid/FileInfo.h>
@@ -76,21 +77,24 @@ typedef struct
 
 typedef struct
 {
-  UINTN                  FileSize;
-  UINTN                  BufferSize;
-  AC_KERNEL_IMAGE_INFO   Image;
-  AC_APPLE_BOOT_CONTEXT *BootContext;
-  UINT32                 EntryCount;
-  UINT32                 DarwinVersion;
-  UINTN                  PatchApplied;
-  UINTN                  PatchFailed;
-  UINTN                  PatchReplacements;
-  AC_APPLE_BOOT_VIDEO    Video;
-  UINT64                 BootMpidr;
-  UINTN                  EnabledCpuCount;
-  UINT32                 CounterFrequency;
-  CHAR8                  CommandLine[AC_APPLE_BOOT_LINE_LENGTH];
-  CONST CHAR16          *Stage;
+  UINTN                   FileSize;
+  UINTN                   BufferSize;
+  AC_KERNEL_IMAGE_INFO    Image;
+  AC_APPLE_BOOT_CONTEXT  *BootContext;
+  AC_CPU_HANDOFF_CONTEXT *CpuContext;
+  VOID                   *ExitMap;
+  UINTN                   ExitMapCapacity;
+  UINT32                  EntryCount;
+  UINT32                  DarwinVersion;
+  UINTN                   PatchApplied;
+  UINTN                   PatchFailed;
+  UINTN                   PatchReplacements;
+  AC_APPLE_BOOT_VIDEO     Video;
+  UINT64                  BootMpidr;
+  UINTN                   EnabledCpuCount;
+  UINT32                  CounterFrequency;
+  CHAR8                   CommandLine[AC_APPLE_BOOT_LINE_LENGTH];
+  CONST CHAR16           *Stage;
 } AC_BOOT_KERNEL;
 
 EFI_STATUS InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
@@ -98,6 +102,10 @@ EFI_STATUS InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_EN
                                   IN CONST AC_GLOBAL_CONFIG *Config, OUT AC_BOOT_KERNEL *Kernel);
 
 VOID InternalFreeBootKernel(IN OUT AC_BOOT_KERNEL *Kernel);
+
+EFI_STATUS InternalPrepareBootExit(IN OUT AC_BOOT_KERNEL *Kernel);
+
+EFI_STATUS InternalStartBootKernel(IN EFI_HANDLE ImageHandle, IN OUT AC_BOOT_KERNEL *Kernel);
 
 EFI_STATUS InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG *Framebuffer,
                                     OUT AC_BOOT_PLATFORM *Platform, OUT CONST CHAR16 **Stage);

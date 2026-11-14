@@ -2,9 +2,36 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <key>Platform</key>
+  <dict>
+    <key>CpuHandoff</key>
+    <dict>
+      <key>Mode</key>
+      <string>Direct</string>
+      <key>TCBPath</key>
+      <string></string>
+    </dict>
+    <key>Framebuffer</key>
+    <dict>
+      <key>Mode</key>
+      <string>Auto</string>
+    </dict>
+  </dict>
+  <key>NVRAM</key>
+  <dict>
+    <key>Delete</key>
+    <dict/>
+    <key>Add</key>
+    <dict/>
+  </dict>
   <key>UEFI</key>
   <dict>
     <key>Drivers</key>
+    <array/>
+  </dict>
+  <key>Kernel</key>
+  <dict>
+    <key>Patch</key>
     <array/>
   </dict>
 </dict>

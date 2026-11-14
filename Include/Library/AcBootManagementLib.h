@@ -81,6 +81,9 @@ VOID AcFreeBootResources(IN OUT AC_BOOT_RESOURCES *Resources OPTIONAL);
   Config is borrowed and must remain allocated and unchanged until return.
   It must come from AcConfigurationInit().
 
+  Successful boot never returns. Errors before the first ExitBootServices call
+  can return to the picker. Later errors halt without calling firmware services.
+
   @retval EFI_INVALID_PARAMETER  ImageHandle or Config is NULL.
   @retval EFI_UNSUPPORTED  Required console interfaces are unavailable.
   @return                 An error from boot discovery or console input/output.

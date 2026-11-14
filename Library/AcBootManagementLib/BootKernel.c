@@ -87,6 +87,9 @@ VOID
 InternalFreeBootKernel(IN OUT AC_BOOT_KERNEL *Kernel)
 {
   AcAppleBootFree(Kernel->BootContext);
+  AcCpuHandoffFree(Kernel->CpuContext);
+  if (Kernel->ExitMap != NULL)
+    FreePool(Kernel->ExitMap);
   ZeroMem(Kernel, sizeof(*Kernel));
 }
 
@@ -181,6 +184,15 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   Root->Close(Root);
   Root = NULL;
   Status = InternalReadBootPlatform(&Config->Platform.Framebuffer, &Platform, &Kernel->Stage);
+  if (EFI_ERROR(Status))
+    goto Failure;
+  Kernel->Stage = L"Prepare CPU handoff";
+  Status = AcCpuHandoffPrepare(ImageHandle, &Config->Platform.CpuHandoff, &Platform.Video,
+                               &Kernel->CpuContext);
+  if (EFI_ERROR(Status))
+    goto Failure;
+  Kernel->Stage = L"Prepare final memory map workspace";
+  Status = InternalPrepareBootExit(Kernel);
   if (EFI_ERROR(Status))
     goto Failure;
   Kernel->Stage = L"Create Apple Device Tree";

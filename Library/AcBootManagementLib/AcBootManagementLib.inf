@@ -16,9 +16,10 @@
   BuiltinPicker.c
   BootScan.c
   BootResources.c
+  BootRecovery.c
   BootFile.c
   BootKernel.c
-  BootRecovery.c
+  BootExit.c
   BootPlatform.c
   BootDeviceTree.c
 
@@ -29,6 +30,7 @@
 
 [LibraryClasses]
   AcAppleBootLib
+  AcCpuHandoffLib
   AcAcpiLib
   AcAppleAdtLib
   AcAppleKernelLib
