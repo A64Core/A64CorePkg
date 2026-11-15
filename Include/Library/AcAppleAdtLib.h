@@ -32,6 +32,15 @@ VOID AcAppleAdtFree(IN AC_APPLE_ADT_TREE *Tree OPTIONAL);
 **/
 EFI_STATUS AcAppleAdtEnsureNode(IN OUT AC_APPLE_ADT_TREE *Tree, IN CONST CHAR8 *Path);
 
+/**
+  Return a borrowed direct child's name by zero-based insertion order.
+
+  Missing parents and past-end indices return EFI_NOT_FOUND. Name is NULL on
+  failure and remains valid until that child or its tree is deleted.
+**/
+EFI_STATUS AcAppleAdtGetChildName(IN CONST AC_APPLE_ADT_TREE *Tree, IN CONST CHAR8 *Path,
+                                  IN UINTN Index, OUT CONST CHAR8 **Name);
+
 /** Delete a subtree. Missing nodes return EFI_NOT_FOUND; root returns EFI_ACCESS_DENIED. **/
 EFI_STATUS AcAppleAdtDeleteNode(IN OUT AC_APPLE_ADT_TREE *Tree, IN CONST CHAR8 *Path);
 

@@ -245,6 +245,35 @@ Failure:
 }
 
 EFI_STATUS
+AcAppleAdtGetChildName(IN CONST AC_APPLE_ADT_TREE *Tree, IN CONST CHAR8 *Path, IN UINTN Index,
+                       OUT CONST CHAR8 **Name)
+{
+  AC_ADT_NODE *Node;
+  EFI_STATUS   Status;
+
+  if (Name != NULL)
+    *Name = NULL;
+  if (Tree == NULL || Name == NULL)
+    return EFI_INVALID_PARAMETER;
+  Status = ValidatePath(Path);
+  if (EFI_ERROR(Status))
+    return Status;
+  Node = FindNode(Tree, Path, NULL);
+  if (Node == NULL)
+    return EFI_NOT_FOUND;
+  Node = Node->Children;
+  while (Node != NULL && Index != 0)
+  {
+    Node = Node->Next;
+    --Index;
+  }
+  if (Node == NULL)
+    return EFI_NOT_FOUND;
+  *Name = Node->Name;
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
 AcAppleAdtDeleteNode(IN OUT AC_APPLE_ADT_TREE *Tree, IN CONST CHAR8 *Path)
 {
   AC_ADT_NODE  *Parent;
