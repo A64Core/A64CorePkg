@@ -16,6 +16,7 @@
   ConfigurationKernel.c
   ConfigurationNvram.c
   ConfigurationPlatform.c
+  ConfigurationAdt.c
   ConfigurationInternal.h
 
 [Packages]

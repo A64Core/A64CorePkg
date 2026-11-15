@@ -58,6 +58,7 @@ def main() -> int:
             library_root / "AcConfigurationLib" / "ConfigurationKernel.c",
             library_root / "AcConfigurationLib" / "ConfigurationNvram.c",
             library_root / "AcConfigurationLib" / "ConfigurationPlatform.c",
+            library_root / "AcConfigurationLib" / "ConfigurationAdt.c",
             *plist_sources,
         ]),
     ]

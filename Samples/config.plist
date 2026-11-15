@@ -34,5 +34,12 @@
     <key>Patch</key>
     <array/>
   </dict>
+  <key>ADT</key>
+  <dict>
+    <key>Add</key>
+    <dict/>
+    <key>Delete</key>
+    <array/>
+  </dict>
 </dict>
 </plist>

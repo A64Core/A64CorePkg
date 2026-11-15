@@ -73,6 +73,34 @@ typedef struct
   AC_NVRAM_DELETE_ENTRY *Delete;
 } AC_NVRAM_CONFIG;
 
+typedef struct
+{
+  CHAR8         *Name;
+  AC_CONFIG_DATA Value;
+} AC_ADT_PROPERTY_ENTRY;
+
+typedef struct
+{
+  CHAR8                 *Path;
+  UINTN                  PropertyCount;
+  AC_ADT_PROPERTY_ENTRY *Properties;
+} AC_ADT_ADD_ENTRY;
+
+typedef struct
+{
+  CHAR8 *Path;
+  CHAR8 *Property;
+} AC_ADT_DELETE_ENTRY;
+
+typedef struct
+{
+  UINTN                AddCount;
+  AC_ADT_ADD_ENTRY    *Add;
+  UINTN                DeleteCount;
+  AC_ADT_DELETE_ENTRY *Delete;
+  BOOLEAN              Invalid;
+} AC_ADT_CONFIG;
+
 typedef enum
 {
   AcFramebufferAuto,
@@ -116,6 +144,7 @@ typedef struct
   AC_KERNEL_CONFIG   Kernel;
   AC_NVRAM_CONFIG    Nvram;
   AC_PLATFORM_CONFIG Platform;
+  AC_ADT_CONFIG      Adt;
 } AC_GLOBAL_CONFIG;
 
 /**
@@ -142,6 +171,10 @@ typedef struct
   NVRAM owns flattened GUID/name entries and encoded values in source order.
   Data is copied, strings include NUL, integers use four little-endian bytes,
   and booleans use one byte. Invalid entries are diagnosed and skipped.
+  ADT.Add maps absolute node paths to property dictionaries using the same value
+  encoding. ADT.Delete is an array of Path/Property dictionaries; an omitted
+  Property deletes the subtree. Invalid ADT settings mark Adt.Invalid and prevent
+  tree preparation. ADT owns all paths, names, and property data.
   Framebuffer defaults to Auto. Override requires Address, Size, Width, Height,
   RowBytes, PixelFormat (BGRX8), and Rotation (0/90/180/270). Invalid framebuffer
   fields leave Mode Invalid so boot preparation cannot silently use Auto.

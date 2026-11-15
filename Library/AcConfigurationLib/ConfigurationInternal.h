@@ -21,6 +21,11 @@ VOID InternalConfigurationFreePatch(IN OUT AC_KERNEL_PATCH_ENTRY *Patch);
 
 VOID InternalConfigurationFreeNvram(IN OUT AC_NVRAM_CONFIG *Nvram);
 
+VOID InternalConfigurationFreeAdt(IN OUT AC_ADT_CONFIG *Adt);
+
+EFI_STATUS InternalConfigurationParseAdt(IN CONST AC_PLIST_NODE *Node, IN OUT AC_ADT_CONFIG *Adt,
+                                         IN OUT UINTN *IssueCount);
+
 EFI_STATUS InternalConfigurationParseNvram(IN CONST AC_PLIST_NODE *Node,
                                            IN OUT AC_NVRAM_CONFIG *Nvram, IN OUT UINTN *IssueCount);
 
