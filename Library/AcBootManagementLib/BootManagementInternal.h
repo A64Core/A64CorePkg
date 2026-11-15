@@ -115,7 +115,8 @@ VOID InternalFreeBootPlatform(IN OUT AC_BOOT_PLATFORM *Platform);
 EFI_STATUS InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY     *Entry,
                                         IN CONST AC_BOOT_RESOURCES *Resources,
                                         IN CONST AC_BOOT_PLATFORM  *Platform,
-                                        IN BOOLEAN HasTrustCache, OUT AC_APPLE_ADT_TREE **Tree);
+                                        IN CONST AC_ADT_CONFIG *Config, IN BOOLEAN HasTrustCache,
+                                        OUT AC_APPLE_ADT_TREE **Tree);
 
 EFI_STATUS InternalUpdateBootDeviceTree(IN OUT AC_APPLE_ADT_TREE    *Tree,
                                         IN CONST AC_APPLE_BOOT_INFO *Info);
