@@ -1,0 +1,28 @@
+## @file
+# Apple NVRAM variable capture and V3 boot data.
+##
+
+[Defines]
+  INF_VERSION    = 0x0001001B
+  BASE_NAME      = AcAppleNvramLib
+  FILE_GUID      = 974A2741-3D40-466B-869F-A031F803DF5C
+  MODULE_TYPE    = UEFI_APPLICATION
+  VERSION_STRING = 0.1
+  LIBRARY_CLASS  = AcAppleNvramLib|UEFI_APPLICATION
+
+[Sources]
+  AcAppleNvramLib.c
+  NvramV3.c
+  NvramInternal.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  A64CorePkg/A64CorePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  PrintLib
+  UefiRuntimeServicesTableLib
