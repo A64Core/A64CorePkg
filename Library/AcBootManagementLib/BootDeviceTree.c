@@ -43,6 +43,70 @@ ApplyConfiguration(AC_APPLE_ADT_TREE *Tree, CONST AC_ADT_CONFIG *Config)
 }
 
 STATIC EFI_STATUS
+SetNvramProperties(AC_APPLE_ADT_TREE *Tree, CONST AC_APPLE_NVRAM_INFO *Nvram)
+{
+  UINT32     BankSize;
+  EFI_STATUS Status;
+
+  if (Nvram == NULL || Nvram->Data == NULL || Nvram->Size == 0 || Nvram->Size > MAX_UINT32 ||
+      Nvram->BankCount == 0 || Nvram->CurrentBank >= Nvram->BankCount)
+    return EFI_INVALID_PARAMETER;
+  BankSize = (UINT32)Nvram->Size;
+  Status = AcAppleAdtEnsureNode(Tree, "/options");
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/chosen", "nvram-bank-size", &BankSize, sizeof(BankSize));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/chosen", "nvram-bank-count", &Nvram->BankCount,
+                                   sizeof(Nvram->BankCount));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/chosen", "nvram-current-bank", &Nvram->CurrentBank,
+                                   sizeof(Nvram->CurrentBank));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/chosen", "nvram-raw", &Nvram->RawController,
+                                   sizeof(Nvram->RawController));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/chosen", "nvram-proxy-data", Nvram->Data, Nvram->Size);
+  return Status;
+}
+
+STATIC EFI_STATUS
+ValidateNvramProperties(CONST AC_APPLE_ADT_TREE *Tree, CONST AC_APPLE_NVRAM_INFO *Nvram)
+{
+  UINT32      BankSize = (UINT32)Nvram->Size;
+  CONST VOID *Data;
+  UINTN       Size;
+  EFI_STATUS  Status;
+  CONST struct
+  {
+    CONST CHAR8 *Name;
+    CONST VOID  *Data;
+    UINTN        Size;
+  } Properties[] = {{"nvram-bank-size", &BankSize, sizeof(BankSize)},
+                    {"nvram-bank-count", &Nvram->BankCount, sizeof(Nvram->BankCount)},
+                    {"nvram-current-bank", &Nvram->CurrentBank, sizeof(Nvram->CurrentBank)},
+                    {"nvram-raw", &Nvram->RawController, sizeof(Nvram->RawController)},
+                    {"nvram-proxy-data", Nvram->Data, Nvram->Size}};
+
+  Status = AcAppleAdtGetProperty(Tree, "/options", "name", &Data, &Size);
+  if (EFI_ERROR(Status))
+    return Status;
+  for (UINTN Index = 0; Index < ARRAY_SIZE(Properties); ++Index)
+  {
+    Status = AcAppleAdtGetProperty(Tree, "/chosen", Properties[Index].Name, &Data, &Size);
+    if (!EFI_ERROR(Status) &&
+        (Size != Properties[Index].Size || CompareMem(Data, Properties[Index].Data, Size) != 0))
+      Status = EFI_COMPROMISED_DATA;
+    if (EFI_ERROR(Status))
+    {
+      DEBUG((DEBUG_ERROR, "ACBM: Invalid NVRAM handoff property %a: %r\n", Properties[Index].Name,
+             Status));
+      return Status;
+    }
+  }
+  return EFI_SUCCESS;
+}
+
+STATIC EFI_STATUS
 ReadCpuNumber(CONST AC_APPLE_ADT_TREE *Tree, CONST CHAR8 *Path, CONST CHAR8 *Name, UINT32 *Value)
 {
   CONST VOID *Data;
@@ -171,7 +235,8 @@ ValidateCpuTopology(CONST AC_APPLE_ADT_TREE *Tree, CONST AC_BOOT_PLATFORM *Platf
 
 EFI_STATUS
 InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RESOURCES *Resources,
-                             IN CONST AC_BOOT_PLATFORM *Platform, IN CONST AC_ADT_CONFIG *Config,
+                             IN CONST AC_BOOT_PLATFORM    *Platform,
+                             IN CONST AC_APPLE_NVRAM_INFO *Nvram, IN CONST AC_ADT_CONFIG *Config,
                              IN BOOLEAN HasTrustCache, OUT AC_APPLE_ADT_TREE **Tree)
 {
   AC_APPLE_ADT_TREE         *Result;
@@ -227,7 +292,11 @@ InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RES
       AcAppleAdtSetProperty(Result, "/chosen", "boot-manifest-hash", Resources->BootManifestHash,
                             sizeof(Resources->BootManifestHash));
   if (!EFI_ERROR(Status))
+    Status = SetNvramProperties(Result, Nvram);
+  if (!EFI_ERROR(Status))
     Status = ApplyConfiguration(Result, Config);
+  if (!EFI_ERROR(Status))
+    Status = ValidateNvramProperties(Result, Nvram);
   if (!EFI_ERROR(Status))
     Status = ValidateCpuTopology(Result, Platform);
   if (!EFI_ERROR(Status))

@@ -115,6 +115,8 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   AC_APPLE_ADT_TREE           *DeviceTree = NULL;
   AC_APPLE_BOOT_INFO           Info;
   AC_APPLE_BOOT_ARGUMENTS      Arguments = {0};
+  AC_APPLE_NVRAM_CONTEXT      *Nvram = NULL;
+  AC_APPLE_NVRAM_INFO          NvramInfo;
   UINTN                        DeviceTreeSize = 0;
 
   ZeroMem(Kernel, sizeof(*Kernel));
@@ -183,7 +185,14 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   }
   Root->Close(Root);
   Root = NULL;
-  Status = InternalReadBootPlatform(&Config->Platform.Framebuffer, &Platform, &Kernel->Stage);
+  Kernel->Stage = L"Capture Apple NVRAM variables";
+  Status = AcAppleNvramCreate(&Nvram);
+  if (!EFI_ERROR(Status))
+    Status = AcAppleNvramGetInfo(Nvram, &NvramInfo);
+  if (EFI_ERROR(Status))
+    goto Failure;
+  Status =
+    InternalReadBootPlatform(&Config->Platform.Framebuffer, Nvram, &Platform, &Kernel->Stage);
   if (EFI_ERROR(Status))
     goto Failure;
   Kernel->Stage = L"Prepare CPU handoff";
@@ -196,7 +205,7 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   if (EFI_ERROR(Status))
     goto Failure;
   Kernel->Stage = L"Create Apple Device Tree";
-  Status = InternalCreateBootDeviceTree(Entry, Resources, &Platform, &Config->Adt,
+  Status = InternalCreateBootDeviceTree(Entry, Resources, &Platform, &NvramInfo, &Config->Adt,
                                         Input.TrustCacheCount != 0, &DeviceTree);
   if (EFI_ERROR(Status))
     goto Failure;
@@ -236,6 +245,7 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   Kernel->CounterFrequency = Platform.CounterFrequency;
   CopyMem(Kernel->CommandLine, Platform.CommandLine, sizeof(Kernel->CommandLine));
   AcAppleAdtFree(DeviceTree);
+  AcAppleNvramFree(Nvram);
   InternalFreeBootPlatform(&Platform);
   AcKernelCollectionFree(&Collection);
   FreePool(Buffer);
@@ -246,6 +256,7 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
 
 Failure:
   AcAppleAdtFree(DeviceTree);
+  AcAppleNvramFree(Nvram);
   InternalFreeBootPlatform(&Platform);
   if (Root != NULL)
     Root->Close(Root);

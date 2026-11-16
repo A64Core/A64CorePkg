@@ -5,29 +5,28 @@
 #include "BootManagementInternal.h"
 
 #include <Library/ArmLib.h>
-#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Protocol/GraphicsOutput.h>
 #include <Protocol/Rng.h>
 
 STATIC EFI_STATUS
-ReadCommandLine(CHAR8 CommandLine[AC_APPLE_BOOT_LINE_LENGTH])
+ReadCommandLine(CONST AC_APPLE_NVRAM_CONTEXT *Nvram, CHAR8 CommandLine[AC_APPLE_BOOT_LINE_LENGTH])
 {
-  EFI_GUID   Guid = {0x7C436110, 0xAB2A, 0x4BBB, {0xA8, 0x80, 0xFE, 0x41, 0x99, 0x5C, 0x9F, 0x82}};
-  UINTN      Size = AC_APPLE_BOOT_LINE_LENGTH;
-  UINTN      Length;
-  EFI_STATUS Status;
+  CONST VOID *Data;
+  UINTN       Size;
+  UINTN       Length;
+  EFI_STATUS  Status;
 
-  if (gRT == NULL || gRT->GetVariable == NULL)
-    return EFI_UNSUPPORTED;
-  Status = gRT->GetVariable(L"boot-args", &Guid, NULL, &Size, CommandLine);
+  Status = AcAppleNvramGetVariable(Nvram, &gAcAppleSystemNvramGuid, "boot-args", &Data, &Size);
+  if (Status == EFI_NOT_FOUND)
+    Status = AcAppleNvramGetVariable(Nvram, &gAcAppleNvramGuid, "boot-args", &Data, &Size);
   if (Status == EFI_NOT_FOUND)
     return EFI_SUCCESS;
-  if (Status == EFI_BUFFER_TOO_SMALL)
-    return EFI_BAD_BUFFER_SIZE;
   if (EFI_ERROR(Status))
     return Status;
   if (Size > AC_APPLE_BOOT_LINE_LENGTH)
-    return EFI_COMPROMISED_DATA;
+    return EFI_BAD_BUFFER_SIZE;
+  if (Size != 0)
+    CopyMem(CommandLine, Data, Size);
   for (Length = 0; Length < Size && CommandLine[Length] != '\0'; ++Length)
     if ((UINT8)CommandLine[Length] < 0x20 || (UINT8)CommandLine[Length] > 0x7E)
       return EFI_COMPROMISED_DATA;
@@ -224,8 +223,9 @@ InternalFreeBootPlatform(IN OUT AC_BOOT_PLATFORM *Platform)
 }
 
 EFI_STATUS
-InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG *Framebuffer,
-                         OUT AC_BOOT_PLATFORM *Platform, OUT CONST CHAR16 **Stage)
+InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG  *Framebuffer,
+                         IN CONST AC_APPLE_NVRAM_CONTEXT *Nvram, OUT AC_BOOT_PLATFORM *Platform,
+                         OUT CONST CHAR16 **Stage)
 {
   AC_ACPI_CONTEXT  *Acpi = NULL;
   EFI_RNG_PROTOCOL *Rng;
@@ -266,7 +266,7 @@ InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG *Framebuffer,
     goto Failure;
   }
   *Stage = L"Read boot-args variable";
-  Status = ReadCommandLine(Platform->CommandLine);
+  Status = ReadCommandLine(Nvram, Platform->CommandLine);
   if (EFI_ERROR(Status))
     goto Failure;
   *Stage = L"Read framebuffer information";

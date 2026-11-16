@@ -8,6 +8,7 @@
 #include <Library/AcBootManagementLib.h>
 #include <Library/AcAppleKernelLib.h>
 #include <Library/AcAppleBootLib.h>
+#include <Library/AcAppleNvramLib.h>
 #include <Library/AcCpuHandoffLib.h>
 #include <Library/AcAppleImg4Lib.h>
 #include <Library/AcAcpiLib.h>
@@ -107,14 +108,16 @@ EFI_STATUS InternalPrepareBootExit(IN OUT AC_BOOT_KERNEL *Kernel);
 
 EFI_STATUS InternalStartBootKernel(IN EFI_HANDLE ImageHandle, IN OUT AC_BOOT_KERNEL *Kernel);
 
-EFI_STATUS InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG *Framebuffer,
+EFI_STATUS InternalReadBootPlatform(IN CONST AC_FRAMEBUFFER_CONFIG  *Framebuffer,
+                                    IN CONST AC_APPLE_NVRAM_CONTEXT *Nvram,
                                     OUT AC_BOOT_PLATFORM *Platform, OUT CONST CHAR16 **Stage);
 
 VOID InternalFreeBootPlatform(IN OUT AC_BOOT_PLATFORM *Platform);
 
-EFI_STATUS InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY     *Entry,
-                                        IN CONST AC_BOOT_RESOURCES *Resources,
-                                        IN CONST AC_BOOT_PLATFORM  *Platform,
+EFI_STATUS InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY       *Entry,
+                                        IN CONST AC_BOOT_RESOURCES   *Resources,
+                                        IN CONST AC_BOOT_PLATFORM    *Platform,
+                                        IN CONST AC_APPLE_NVRAM_INFO *Nvram,
                                         IN CONST AC_ADT_CONFIG *Config, IN BOOLEAN HasTrustCache,
                                         OUT AC_APPLE_ADT_TREE **Tree);
 

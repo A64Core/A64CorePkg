@@ -30,6 +30,7 @@
 
 [LibraryClasses]
   AcAppleBootLib
+  AcAppleNvramLib
   AcCpuHandoffLib
   AcAcpiLib
   AcAppleAdtLib
