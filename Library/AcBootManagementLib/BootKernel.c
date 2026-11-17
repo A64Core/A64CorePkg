@@ -3,10 +3,215 @@
 **/
 
 #include "BootManagementInternal.h"
+#include <Protocol/LoadedImage.h>
 
 #define AC_BOOT_KERNEL_FILE_LIMIT (512U * 1024U * 1024U)
 #define AC_BOOT_KERNEL_DECODED_LIMIT (1024U * 1024U * 1024U)
 #define AC_BOOT_TRUST_CACHE_LIMIT (16U * 1024U * 1024U)
+
+STATIC EFI_STATUS
+KextFilePath(CONST CHAR8 *Bundle, CONST CHAR8 *Relative, CHAR16 **Result)
+{
+  CONST CHAR16 Prefix[] = L"\\EFI\\AC\\Kexts\\";
+  CONST CHAR8 *Parts[2] = {Bundle, Relative};
+  UINTN        Length;
+  UINTN        Used;
+  UINTN        Part;
+  UINTN        Continuations;
+  UINTN        Index;
+  UINT32       Value;
+  UINT32       Minimum;
+  UINT8        Byte;
+  CONST UINT8 *Text;
+  CHAR16      *Path;
+  *Result = NULL;
+  Length = AsciiStrLen(Bundle) + AsciiStrLen(Relative) + ARRAY_SIZE(Prefix) + 1;
+  if (Length > MAX_UINT16 / sizeof(CHAR16))
+    return EFI_BAD_BUFFER_SIZE;
+  Path = AllocateZeroPool(Length * sizeof(CHAR16));
+  if (Path == NULL)
+    return EFI_OUT_OF_RESOURCES;
+  CopyMem(Path, Prefix, sizeof(Prefix));
+  Used = ARRAY_SIZE(Prefix) - 1;
+  for (Part = 0; Part < 2; ++Part)
+  {
+    if (Part != 0)
+      Path[Used++] = L'\\';
+    Text = (CONST UINT8 *)Parts[Part];
+    while (*Text != 0)
+    {
+      Byte = *Text++;
+      if (Byte < 0x80)
+      {
+        Path[Used++] = Byte == '/' ? L'\\' : Byte;
+        continue;
+      }
+      if (Byte >= 0xC2 && Byte <= 0xDF)
+      {
+        Continuations = 1;
+        Value = Byte & 31U;
+        Minimum = 0x80;
+      }
+      else if (Byte >= 0xE0 && Byte <= 0xEF)
+      {
+        Continuations = 2;
+        Value = Byte & 15U;
+        Minimum = 0x800;
+      }
+      else if (Byte >= 0xF0 && Byte <= 0xF4)
+      {
+        Continuations = 3;
+        Value = Byte & 7U;
+        Minimum = 0x10000;
+      }
+      else
+        goto Invalid;
+      for (Index = 0; Index < Continuations; ++Index)
+      {
+        if ((*Text & 0xC0U) != 0x80U)
+          goto Invalid;
+        Value = (Value << 6) | (*Text++ & 63U);
+      }
+      if (Value < Minimum || Value > 0x10FFFF || (Value >= 0xD800 && Value <= 0xDFFF))
+        goto Invalid;
+      if (Value < 0x10000)
+        Path[Used++] = (CHAR16)Value;
+      else
+      {
+        Value -= 0x10000;
+        Path[Used++] = (CHAR16)(0xD800U | (Value >> 10));
+        Path[Used++] = (CHAR16)(0xDC00U | (Value & 1023U));
+      }
+    }
+  }
+  Path[Used] = 0;
+  *Result = Path;
+  return EFI_SUCCESS;
+Invalid:
+  FreePool(Path);
+  return EFI_INVALID_PARAMETER;
+}
+
+STATIC EFI_STATUS
+InjectKexts(EFI_HANDLE ImageHandle, CONST AC_KERNEL_CONFIG *Config, UINT32 DarwinVersion,
+            AC_KERNEL_COLLECTION_CONTEXT *Collection)
+{
+  EFI_LOADED_IMAGE_PROTOCOL       *Loaded;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *FileSystem;
+  EFI_FILE_PROTOCOL               *Root = NULL;
+  AC_KERNEL_KEXT                  *Kexts = NULL;
+  UINTN                           *Indices = NULL;
+  AC_KERNEL_COLLECTION_CONTEXT     Result = {0};
+  CONST AC_KERNEL_ADD_ENTRY       *Entry;
+  CHAR16                          *Path = NULL;
+  VOID                            *Data;
+  UINTN                            Size;
+  UINTN                            Count = 0;
+  UINTN                            Index;
+  UINTN                            Used = 0;
+  UINTN                            Total = 0;
+  UINTN                            Failed = MAX_UINTN;
+  UINT8                           *Old;
+  EFI_STATUS                       Status;
+  for (Index = 0; Index < Config->AddCount; ++Index)
+    if (Config->Add[Index].Enabled && DarwinVersion >= Config->Add[Index].MinKernel &&
+        (Config->Add[Index].MaxKernel == 0 || DarwinVersion <= Config->Add[Index].MaxKernel))
+      ++Count;
+  if (Count == 0)
+    return EFI_SUCCESS;
+  Kexts = AllocateZeroPool(Count * sizeof(*Kexts));
+  Indices = AllocateZeroPool(Count * sizeof(*Indices));
+  if (Kexts == NULL || Indices == NULL)
+  {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Done;
+  }
+  Status = gBS->HandleProtocol(ImageHandle, &gEfiLoadedImageProtocolGuid, (VOID **)&Loaded);
+  if (!EFI_ERROR(Status))
+    Status = gBS->HandleProtocol(Loaded->DeviceHandle, &gEfiSimpleFileSystemProtocolGuid,
+                                 (VOID **)&FileSystem);
+  if (!EFI_ERROR(Status))
+    Status = FileSystem->OpenVolume(FileSystem, &Root);
+  if (EFI_ERROR(Status))
+    goto Done;
+  for (Index = 0; Index < Config->AddCount; ++Index)
+  {
+    Entry = &Config->Add[Index];
+    if (!Entry->Enabled || DarwinVersion < Entry->MinKernel ||
+        (Entry->MaxKernel != 0 && DarwinVersion > Entry->MaxKernel))
+      continue;
+    Indices[Used] = Index;
+    Failed = Used;
+    Kexts[Used].BundlePath = Entry->BundlePath;
+    Kexts[Used].ExecutablePath = Entry->ExecutablePath;
+    Status = KextFilePath(Entry->BundlePath, Entry->PlistPath, &Path);
+    if (!EFI_ERROR(Status))
+      Status = InternalReadBootFile(Root, Path, 16U * 1024U * 1024U, &Data, &Size);
+    if (Path != NULL)
+    {
+      FreePool(Path);
+      Path = NULL;
+    }
+    if (EFI_ERROR(Status))
+      goto Done;
+    Kexts[Used].Plist = Data;
+    Kexts[Used].PlistSize = Size;
+    Total += Size;
+    if (Entry->ExecutablePath != NULL && Entry->ExecutablePath[0] != '\0')
+    {
+      Status = KextFilePath(Entry->BundlePath, Entry->ExecutablePath, &Path);
+      if (!EFI_ERROR(Status))
+        Status = InternalReadBootFile(Root, Path, 64U * 1024U * 1024U, &Data, &Size);
+      if (Path != NULL)
+      {
+        FreePool(Path);
+        Path = NULL;
+      }
+      if (EFI_ERROR(Status))
+        goto Done;
+      Kexts[Used].Executable = Data;
+      Kexts[Used].ExecutableSize = Size;
+      Total += Size;
+    }
+    if (Total > 256U * 1024U * 1024U)
+    {
+      Status = EFI_BAD_BUFFER_SIZE;
+      goto Done;
+    }
+    ++Used;
+  }
+  Failed = MAX_UINTN;
+  Status = AcKernelCollectionInject(Collection, Kexts, Count, &Result, &Failed);
+  if (!EFI_ERROR(Status))
+  {
+    Old = Collection->Buffer;
+    AcKernelCollectionFree(Collection);
+    *Collection = Result;
+    FreePool(Old);
+  }
+Done:
+  if (EFI_ERROR(Status))
+    DEBUG((DEBUG_ERROR, "ACBM: Kernel.Add[%u] %a: %r\n",
+           Failed < Count && Indices != NULL ? (UINT32)Indices[Failed] : MAX_UINT32,
+           Failed < Count && Kexts != NULL && Kexts[Failed].BundlePath != NULL
+             ? Kexts[Failed].BundlePath
+             : "collection",
+           Status));
+  if (Root != NULL)
+    Root->Close(Root);
+  for (Index = 0; Kexts != NULL && Index < Count; ++Index)
+  {
+    if (Kexts[Index].Plist != NULL)
+      FreePool((VOID *)Kexts[Index].Plist);
+    if (Kexts[Index].Executable != NULL)
+      FreePool((VOID *)Kexts[Index].Executable);
+  }
+  if (Kexts != NULL)
+    FreePool(Kexts);
+  if (Indices != NULL)
+    FreePool(Indices);
+  return Status;
+}
 
 STATIC EFI_STATUS
 VerifyRecoveryManifest(EFI_FILE_PROTOCOL *Root, CONST AC_BOOT_RESOURCES *Resources,
@@ -161,6 +366,13 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
   Status = ApplyPatches(&Config->Kernel, &Collection, Kernel, FALSE);
   if (EFI_ERROR(Status))
     goto Failure;
+  Kernel->Stage = L"Inject Kernel.Add extensions";
+  Status = InjectKexts(ImageHandle, &Config->Kernel, Kernel->DarwinVersion, &Collection);
+  Buffer = Collection.Buffer;
+  if (EFI_ERROR(Status))
+    goto Failure;
+  Kernel->BufferSize = Collection.BufferSize;
+  Kernel->EntryCount = Collection.EntryCount;
   if (Resources->StaticTrustCachePath != NULL)
   {
     Kernel->Stage = L"Read static trust cache";

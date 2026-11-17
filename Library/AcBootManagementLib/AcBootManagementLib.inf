@@ -49,6 +49,7 @@
   UefiRuntimeServicesTableLib
 
 [Protocols]
+  gEfiLoadedImageProtocolGuid
   gAcApfsVolumeInfoProtocolGuid
   gEfiDevicePathProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
