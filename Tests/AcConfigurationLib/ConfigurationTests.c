@@ -403,6 +403,41 @@ TestKernelAdd(VOID)
   FailAllocationAt = 0;
 }
 
+STATIC VOID
+TestAdtCellProperties(VOID)
+{
+  STATIC CONST CHAR8 Input[] =
+    "<plist><dict><key>#Comment</key><string>Ignored schema comment</string>"
+    "<key>ADT</key><dict><key>Add</key><dict>"
+    "<key>#Comment</key><string>Ignored path comment</string>"
+    "<key>/</key><dict><key>#address-cells</key><data>AgAAAA==</data>"
+    "<key>#size-cells</key><integer>2</integer></dict>"
+    "<key>/controller</key><dict><key>#interrupt-cells</key><integer>2</integer>"
+    "<key>AAPL,phandle</key><integer>4660</integer>"
+    "<key>interrupt-controller</key><data/></dict>"
+    "</dict></dict></dict></plist>";
+  AC_GLOBAL_CONFIG Config;
+  UINTN            Issues;
+  UINT32           Cells = 2;
+
+  assert(Parse(Input, &Config, &Issues) == EFI_SUCCESS);
+  assert(Issues == 0 && !Config.Adt.Invalid && Config.Adt.AddCount == 2);
+  assert(Config.Adt.Add[0].PropertyCount == 2 && Config.Adt.Add[1].PropertyCount == 3);
+  assert(strcmp(Config.Adt.Add[0].Properties[0].Name, "#address-cells") == 0);
+  assert(strcmp(Config.Adt.Add[0].Properties[1].Name, "#size-cells") == 0);
+  assert(strcmp(Config.Adt.Add[1].Properties[0].Name, "#interrupt-cells") == 0);
+  for (UINTN Index = 0; Index < 2; ++Index)
+  {
+    assert(Config.Adt.Add[0].Properties[Index].Value.Size == sizeof(Cells));
+    assert(CompareMem(Config.Adt.Add[0].Properties[Index].Value.Data, &Cells, sizeof(Cells)) == 0);
+  }
+  assert(Config.Adt.Add[1].Properties[0].Value.Size == sizeof(Cells));
+  assert(CompareMem(Config.Adt.Add[1].Properties[0].Value.Data, &Cells, sizeof(Cells)) == 0);
+  assert(Config.Adt.Add[1].Properties[2].Value.Size == 0);
+  AcConfigurationFree(&Config);
+  assert(OutstandingPools == 0);
+}
+
 int
 main(void)
 {
@@ -410,6 +445,7 @@ main(void)
   TestIssues();
   TestPaths();
   TestKernelAdd();
+  TestAdtCellProperties();
   TestFatalAndAllocationFailures();
   return 0;
 }

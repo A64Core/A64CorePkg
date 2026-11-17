@@ -195,8 +195,6 @@ ParseAdd(CONST AC_PLIST_NODE *Node, AC_ADT_CONFIG *Adt, UINTN *Issues)
     for (UINTN Item = 0; Item < AcPlistGetCount(Group); ++Item)
     {
       AcPlistGetDictionaryItem(Group, Item, &Name, &Value);
-      if (Name[0] == '#')
-        continue;
       if (!ValidProperty(Name))
       {
         AdtIssue(Adt, Issues, "ADT.Add", Index, Name, "invalid or protected property name");
