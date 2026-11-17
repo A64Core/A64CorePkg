@@ -209,6 +209,143 @@ ParsePatches(CONST AC_PLIST_NODE *Node, AC_KERNEL_CONFIG *Kernel, UINTN *Issues)
   return EFI_SUCCESS;
 }
 
+VOID
+InternalConfigurationFreeAdd(IN OUT AC_KERNEL_ADD_ENTRY *Entry)
+{
+  if (Entry->BundlePath != NULL)
+    FreePool(Entry->BundlePath);
+  if (Entry->ExecutablePath != NULL)
+    FreePool(Entry->ExecutablePath);
+  if (Entry->PlistPath != NULL)
+    FreePool(Entry->PlistPath);
+  if (Entry->Comment != NULL)
+    FreePool(Entry->Comment);
+  ZeroMem(Entry, sizeof(*Entry));
+}
+
+STATIC BOOLEAN
+RelativePath(CONST CHAR8 *Path)
+{
+  UINTN Start = 0;
+  UINTN Index;
+  if (Path == NULL || Path[0] == '\0' || Path[0] == '/' || Path[0] == '\\')
+    return FALSE;
+  for (Index = 0;; ++Index)
+  {
+    if (Path[Index] == ':' || ((UINT8)Path[Index] < 0x20U && Path[Index] != '\0') ||
+        (UINT8)Path[Index] == 0x7FU)
+      return FALSE;
+    if (Path[Index] != '/' && Path[Index] != '\\' && Path[Index] != '\0')
+      continue;
+    if (Index == Start || (Index - Start == 1 && Path[Start] == '.') ||
+        (Index - Start == 2 && Path[Start] == '.' && Path[Start + 1] == '.'))
+      return FALSE;
+    if (Path[Index] == '\0')
+      return TRUE;
+    Start = Index + 1;
+  }
+}
+
+STATIC EFI_STATUS
+ParseAdds(CONST AC_PLIST_NODE *Node, AC_KERNEL_CONFIG *Kernel, UINTN *Issues)
+{
+  UINTN                Count = AcPlistGetCount(Node);
+  UINTN                Index;
+  UINTN                Field;
+  CONST AC_PLIST_NODE *Value;
+  CONST AC_PLIST_NODE *Item;
+  CONST CHAR8         *Key;
+  CONST CHAR8         *Text;
+  CHAR8              **String;
+  UINT32              *Version;
+  AC_KERNEL_ADD_ENTRY *Entry;
+  EFI_STATUS           Status;
+  BOOLEAN              Valid;
+
+  if (AcPlistGetType(Node) != AcPlistTypeArray || Count > 1024)
+  {
+    InternalConfigurationIssue(Issues, "Kernel.", MAX_UINTN, "Add",
+                               "expected at most 1024 entries");
+    return EFI_SUCCESS;
+  }
+  if (Count == 0)
+    return EFI_SUCCESS;
+  Kernel->Add = AllocateZeroPool(Count * sizeof(*Kernel->Add));
+  if (Kernel->Add == NULL)
+    return EFI_OUT_OF_RESOURCES;
+  Kernel->AddCount = Count;
+  for (Index = 0; Index < Count; ++Index)
+  {
+    Entry = &Kernel->Add[Index];
+    Item = AcPlistGetArrayItem(Node, Index);
+    Valid = AcPlistGetType(Item) == AcPlistTypeDictionary;
+    if (!Valid)
+    {
+      InternalConfigurationIssue(Issues, "Kernel.Add", Index, "", "expected a dictionary");
+      continue;
+    }
+    for (Field = 0; Field < AcPlistGetCount(Item); ++Field)
+    {
+      AcPlistGetDictionaryItem(Item, Field, &Key, &Value);
+      if (Key[0] == '#')
+        continue;
+      String = NULL;
+      Version = NULL;
+      Status = EFI_SUCCESS;
+      if (AsciiStrCmp(Key, "BundlePath") == 0)
+        String = &Entry->BundlePath;
+      else if (AsciiStrCmp(Key, "ExecutablePath") == 0)
+        String = &Entry->ExecutablePath;
+      else if (AsciiStrCmp(Key, "PlistPath") == 0)
+        String = &Entry->PlistPath;
+      else if (AsciiStrCmp(Key, "Comment") == 0)
+        String = &Entry->Comment;
+      else if (AsciiStrCmp(Key, "MinKernel") == 0)
+        Version = &Entry->MinKernel;
+      else if (AsciiStrCmp(Key, "MaxKernel") == 0)
+        Version = &Entry->MaxKernel;
+      else if (AsciiStrCmp(Key, "Enabled") == 0)
+        Status = AcPlistGetBoolean(Value, &Entry->Enabled);
+      else
+      {
+        InternalConfigurationIssue(Issues, "Kernel.Add", Index, Key, "unsupported key");
+        continue;
+      }
+      if (String != NULL)
+      {
+        Text = AcPlistGetString(Value);
+        if (Text == NULL)
+          Status = EFI_INVALID_PARAMETER;
+        else
+        {
+          *String = AllocateZeroPool(AsciiStrLen(Text) + 1);
+          if (*String == NULL)
+            return EFI_OUT_OF_RESOURCES;
+          CopyMem(*String, Text, AsciiStrLen(Text));
+        }
+      }
+      else if (Version != NULL)
+        Status = ParseVersion(Value, Version);
+      if (EFI_ERROR(Status))
+      {
+        InternalConfigurationIssue(Issues, "Kernel.Add", Index, Key, "invalid field value");
+        Valid = FALSE;
+      }
+    }
+    if (Entry->Enabled && (!RelativePath(Entry->BundlePath) || !RelativePath(Entry->PlistPath) ||
+                           (Entry->ExecutablePath != NULL && Entry->ExecutablePath[0] != '\0' &&
+                            !RelativePath(Entry->ExecutablePath)) ||
+                           (Entry->MaxKernel != 0 && Entry->MinKernel > Entry->MaxKernel)))
+    {
+      InternalConfigurationIssue(Issues, "Kernel.Add", Index, "", "invalid paths or version range");
+      Valid = FALSE;
+    }
+    if (!Valid)
+      Entry->Enabled = FALSE;
+  }
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS
 InternalConfigurationParseKernel(IN CONST AC_PLIST_NODE *Node, IN OUT AC_KERNEL_CONFIG *Kernel,
                                  IN OUT UINTN *IssueCount)
@@ -228,7 +365,13 @@ InternalConfigurationParseKernel(IN CONST AC_PLIST_NODE *Node, IN OUT AC_KERNEL_
     AcPlistGetDictionaryItem(Node, Index, &Key, &Value);
     if (Key[0] == '#')
       continue;
-    if (AsciiStrCmp(Key, "Patch") == 0)
+    if (AsciiStrCmp(Key, "Add") == 0)
+    {
+      Status = ParseAdds(Value, Kernel, IssueCount);
+      if (EFI_ERROR(Status))
+        return Status;
+    }
+    else if (AsciiStrCmp(Key, "Patch") == 0)
     {
       Status = ParsePatches(Value, Kernel, IssueCount);
       if (EFI_ERROR(Status))

@@ -31,6 +31,8 @@
   </dict>
   <key>Kernel</key>
   <dict>
+    <key>Add</key>
+    <array/>
     <key>Patch</key>
     <array/>
   </dict>

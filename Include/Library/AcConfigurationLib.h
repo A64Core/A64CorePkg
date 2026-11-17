@@ -45,9 +45,22 @@ typedef struct
   UINT32         MaxKernel;
 } AC_KERNEL_PATCH_ENTRY;
 
-/** Owned patches in source order; version bounds use Major*10000+Minor*100+Revision. **/
 typedef struct
 {
+  BOOLEAN Enabled;
+  CHAR8  *BundlePath;
+  CHAR8  *ExecutablePath;
+  CHAR8  *PlistPath;
+  CHAR8  *Comment;
+  UINT32  MinKernel;
+  UINT32  MaxKernel;
+} AC_KERNEL_ADD_ENTRY;
+
+/** Owned entries in source order; version bounds use Major*10000+Minor*100+Revision. **/
+typedef struct
+{
+  UINTN                  AddCount;
+  AC_KERNEL_ADD_ENTRY   *Add;
   UINTN                  PatchCount;
   AC_KERNEL_PATCH_ENTRY *Patches;
 } AC_KERNEL_CONFIG;

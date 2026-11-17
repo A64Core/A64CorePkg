@@ -39,6 +39,10 @@ AcConfigurationFree(IN OUT AC_GLOBAL_CONFIG *Config OPTIONAL)
     InternalConfigurationFreeDriver(&Config->Uefi.Drivers[Index]);
   if (Config->Uefi.Drivers != NULL)
     FreePool(Config->Uefi.Drivers);
+  for (Index = 0; Index < Config->Kernel.AddCount; ++Index)
+    InternalConfigurationFreeAdd(&Config->Kernel.Add[Index]);
+  if (Config->Kernel.Add != NULL)
+    FreePool(Config->Kernel.Add);
   for (Index = 0; Index < Config->Kernel.PatchCount; ++Index)
     InternalConfigurationFreePatch(&Config->Kernel.Patches[Index]);
   if (Config->Kernel.Patches != NULL)

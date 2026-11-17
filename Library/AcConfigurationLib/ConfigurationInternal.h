@@ -18,6 +18,7 @@ VOID InternalConfigurationIssue(IN OUT UINTN *IssueCount, IN CONST CHAR8 *Scope,
 VOID InternalConfigurationFreeDriver(IN OUT AC_UEFI_DRIVER_ENTRY *Driver);
 
 VOID InternalConfigurationFreePatch(IN OUT AC_KERNEL_PATCH_ENTRY *Patch);
+VOID InternalConfigurationFreeAdd(IN OUT AC_KERNEL_ADD_ENTRY *Entry);
 
 VOID InternalConfigurationFreeNvram(IN OUT AC_NVRAM_CONFIG *Nvram);
 

@@ -352,12 +352,64 @@ TestFatalAndAllocationFailures(VOID)
   printf(".\n");
 }
 
+STATIC VOID
+TestKernelAdd(VOID)
+{
+  STATIC CONST CHAR8 Input[] =
+    "<plist><dict><key>Kernel</key><dict><key>Add</key><array>"
+    "<dict><key>BundlePath</key><string>Alpha.kext</string><key>Enabled</key><true/>"
+    "<key>PlistPath</key><string>Contents/Info.plist</string>"
+    "<key>ExecutablePath</key><string>Contents/MacOS/Alpha</string>"
+    "<key>Comment</key><string>Example &amp; test</string>"
+    "<key>MinKernel</key><string>20.1.2</string><key>MaxKernel</key><string>29.99.99</string></"
+    "dict>"
+    "<dict><key>BundlePath</key><string>Personality.kext</string><key>Enabled</key><true/>"
+    "<key>PlistPath</key><string>Contents/Info.plist</string><key>ExecutablePath</key><string/>"
+    "<key>MinKernel</key><string/><key>MaxKernel</key><string/></dict>"
+    "<dict><key>BundlePath</key><string>../Invalid.kext</string><key>Enabled</key><true/>"
+    "<key>PlistPath</key><string>Contents/Info.plist</string></dict>"
+    "<dict><key>Enabled</key><true/><key>BundlePath</key><true/></dict>"
+    "<dict><key>Enabled</key><true/><key>BundlePath</key><string>Range.kext</string>"
+    "<key>PlistPath</key><string>Contents/Info.plist</string><key>MinKernel</key><string>30.0.0</"
+    "string>"
+    "<key>MaxKernel</key><string>20.0.0</string></dict>"
+    "<dict><key>Arch</key><string>Any</string></dict>"
+    "</array><key>Patch</key><array/></dict></dict></plist>";
+  AC_GLOBAL_CONFIG Config;
+  UINTN            Issues;
+  UINTN            Total;
+  UINTN            Index;
+  AllocationCalls = 0;
+  assert(Parse(Input, &Config, &Issues) == EFI_SUCCESS);
+  assert(Issues == 5 && Config.Kernel.AddCount == 6);
+  assert(Config.Kernel.Add[0].Enabled && Config.Kernel.Add[1].Enabled);
+  assert(strcmp(Config.Kernel.Add[0].BundlePath, "Alpha.kext") == 0);
+  assert(strcmp(Config.Kernel.Add[0].Comment, "Example & test") == 0);
+  assert(Config.Kernel.Add[0].MinKernel == 200102 && Config.Kernel.Add[0].MaxKernel == 299999);
+  assert(Config.Kernel.Add[1].MinKernel == 0 && Config.Kernel.Add[1].MaxKernel == 0);
+  assert(Config.Kernel.Add[1].ExecutablePath[0] == 0);
+  for (Index = 2; Index < 6; ++Index)
+    assert(!Config.Kernel.Add[Index].Enabled);
+  Total = AllocationCalls;
+  AcConfigurationFree(&Config);
+  for (Index = 1; Index <= Total; ++Index)
+  {
+    AllocationCalls = 0;
+    FailAllocationAt = Index;
+    assert(Parse(Input, &Config, &Issues) == EFI_OUT_OF_RESOURCES);
+    AcConfigurationFree(&Config);
+    assert(OutstandingPools == 0);
+  }
+  FailAllocationAt = 0;
+}
+
 int
 main(void)
 {
   TestOwnershipAndDefaults();
   TestIssues();
   TestPaths();
+  TestKernelAdd();
   TestFatalAndAllocationFailures();
   return 0;
 }
