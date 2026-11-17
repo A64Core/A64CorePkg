@@ -379,12 +379,50 @@ TestFailuresAndMutations(VOID)
          (unsigned)Calls, (unsigned)(sizeof(Fixture) - 1));
 }
 
+STATIC VOID
+TestSerialization(VOID)
+{
+  AC_PLIST_DOCUMENT *Document;
+  AC_PLIST_DOCUMENT *RoundTrip;
+  CHAR8             *Xml;
+  CHAR8             *Again;
+  CHAR8             *Wrapped;
+  UINTN              Size;
+  UINTN              AgainSize;
+  STATIC CONST CHAR8 Text[] =
+    "<plist><dict><key>A&amp;&lt;</key><array><integer>-42</integer><data>AAEC</data>"
+    "<real>1.5</real><date>2000-01-01T00:00:00Z</date><true/><false/>"
+    "<string>&lt;&gt;&amp; Ω</string><dict/></array></dict></plist>";
+  assert(AcPlistParse(Text, sizeof(Text) - 1, &Document) == EFI_SUCCESS);
+  assert(AcPlistSerialize(AcPlistGetRoot(Document), &Xml, &Size) == EFI_SUCCESS);
+  assert(Xml[Size] == 0 && strstr(Xml, "<integer>-42</integer>") != NULL);
+  assert(strstr(Xml, "<key>A&amp;&lt;</key>") != NULL);
+  Wrapped = malloc(Size + 16);
+  assert(Wrapped != NULL);
+  snprintf(Wrapped, Size + 16, "<plist>%s</plist>", Xml);
+  assert(AcPlistParse(Wrapped, strlen(Wrapped), &RoundTrip) == EFI_SUCCESS);
+  assert(AcPlistSerialize(AcPlistGetRoot(RoundTrip), &Again, &AgainSize) == EFI_SUCCESS);
+  assert(Size == AgainSize && strcmp(Xml, Again) == 0);
+  FreePool(Again);
+  AcPlistFree(RoundTrip);
+  free(Wrapped);
+  FreePool(Xml);
+  AllocationCalls = 0;
+  FailAllocationAt = 1;
+  assert(AcPlistSerialize(AcPlistGetRoot(Document), &Xml, &Size) == EFI_OUT_OF_RESOURCES);
+  assert(Xml == NULL && Size == 0);
+  FailAllocationAt = 0;
+  AcPlistFree(Document);
+  assert(OutstandingPools == 0);
+}
+
 int
 main(void)
 {
   TestDocument();
   TestInvalid();
   TestLimits();
+  TestSerialization();
   TestFailuresAndMutations();
   return 0;
 }

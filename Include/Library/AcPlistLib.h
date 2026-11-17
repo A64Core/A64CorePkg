@@ -40,6 +40,14 @@ AcPlistParse(IN CONST VOID *Buffer, IN UINTN BufferSize, OUT AC_PLIST_DOCUMENT *
 
 VOID AcPlistFree(IN AC_PLIST_DOCUMENT *Document OPTIONAL);
 
+/**
+  Export one parsed value as compact XML without a plist wrapper.
+  Buffer is a FreePool-owned, NUL-terminated allocation; Size excludes its NUL.
+  Scalar spelling (including negative integers) is preserved. Keys and strings
+  are escaped. Outputs are cleared on failure; the parsed document is unchanged.
+**/
+EFI_STATUS AcPlistSerialize(IN CONST AC_PLIST_NODE *Node, OUT CHAR8 **Buffer, OUT UINTN *Size);
+
 /** All returned nodes, keys and strings are borrowed until AcPlistFree(). **/
 CONST AC_PLIST_NODE *AcPlistGetRoot(IN CONST AC_PLIST_DOCUMENT *Document);
 
