@@ -213,6 +213,41 @@ AcKernelCollectionInit(OUT AC_KERNEL_COLLECTION_CONTEXT *Context, IN OUT VOID *B
 **/
 VOID AcKernelCollectionFree(IN OUT AC_KERNEL_COLLECTION_CONTEXT *Context OPTIONAL);
 
+typedef struct
+{
+  CONST CHAR8 *BundlePath;
+  CONST CHAR8 *ExecutablePath;
+  CONST VOID  *Plist;
+  UINTN        PlistSize;
+  CONST VOID  *Executable;
+  UINTN        ExecutableSize;
+} AC_KERNEL_KEXT;
+
+/**
+  Link a batch of ARM64e kext bundles into a Boot KC in configuration order.
+
+  Source and inputs are borrowed and never modified. Empty executable paths
+  describe plist-only bundles. Dependencies must exist in Source or earlier
+  inputs. Duplicate IDs, missing/incompatible dependencies, unsupported formats
+  and insufficient mapped capacity are errors. Existing member addresses and
+  fixup targets remain stable. At most 1024 inputs are supported.
+
+  Result must be a distinct, empty context. On success it owns its entry index
+  and borrows a new buffer whose ownership passes to the caller. Release the
+  index with AcKernelCollectionFree and the buffer separately with FreePool.
+  Source retains its original ownership. Failure clears Result without changing
+  Source. FailedIndex identifies an input, or MAX_UINTN for collection errors.
+  For a supported kext-first ARM64 layout, a uniquely recognized native RX mapper
+  is wrapped to retain its original call and map the page-aligned executable tail.
+  Its entry uses zero padding in permanent kernel text; only that segment's file
+  extent is extended. Unsupported or ambiguous mapping code rejects the batch.
+  No kext ABI adapters or signature bypasses are installed.
+**/
+EFI_STATUS
+AcKernelCollectionInject(IN CONST AC_KERNEL_COLLECTION_CONTEXT *Source,
+                         IN CONST AC_KERNEL_KEXT *Kexts, IN UINTN Count,
+                         OUT AC_KERNEL_COLLECTION_CONTEXT *Result, OUT UINTN *FailedIndex OPTIONAL);
+
 /**
   Extract the Darwin version from the kernel's file-backed segments.
 

@@ -18,6 +18,8 @@
   KernelVersion.c
   KernelCollection.c
   KextPatcher.c
+  KextInjector.c
+  KextLinker.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -26,6 +28,7 @@
 [LibraryClasses]
   AcAppleImg4Lib
   AcCompressionLib
+  AcPlistLib
   BaseLib
   BaseMemoryLib
   MemoryAllocationLib

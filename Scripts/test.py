@@ -44,6 +44,13 @@ def main() -> int:
         library_root / "AcPlistLib" / name for name in ("AcPlistLib.c", "PlistParser.c", "PlistValue.c")
     ]
     suites = [
+        ("AcAppleKernelLib", "InjectionTests.c", [
+            *(library_root / "AcAppleKernelLib" / name for name in (
+                "KernelReader.c", "KernelCollection.c", "KernelLoader.c", "KextPatcher.c",
+                "KextInjector.c", "KextLinker.c",
+            )),
+            *plist_sources,
+        ]),
         ("AcAppleKernelLib", "PatchTests.c", [
             library_root / "AcAppleKernelLib" / name for name in (
                 "KernelReader.c", "KernelCollection.c", "KernelVersion.c", "KextPatcher.c",
