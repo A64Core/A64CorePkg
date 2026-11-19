@@ -119,6 +119,7 @@ EFI_STATUS InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY       *Entry,
                                         IN CONST AC_BOOT_PLATFORM    *Platform,
                                         IN CONST AC_APPLE_NVRAM_INFO *Nvram,
                                         IN CONST AC_ADT_CONFIG *Config, IN BOOLEAN HasTrustCache,
+                                        IN AC_CPU_HANDOFF_MODE  HandoffMode,
                                         OUT AC_APPLE_ADT_TREE **Tree);
 
 EFI_STATUS InternalUpdateBootDeviceTree(IN OUT AC_APPLE_ADT_TREE    *Tree,

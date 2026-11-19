@@ -5,6 +5,42 @@
 #include "BootManagementInternal.h"
 
 STATIC EFI_STATUS
+SetPsciProperties(AC_APPLE_ADT_TREE *Tree, AC_CPU_HANDOFF_MODE HandoffMode)
+{
+  AC_ACPI_CONTEXT  *Acpi = NULL;
+  AC_ACPI_FADT_INFO Fadt;
+  EFI_STATUS        Status;
+  CONST UINT32      Version = 1;
+  CONST UINT32      EntryEl = 2;
+  CONST UINT64      Reset = 0;
+
+  Status = AcAcpiOpen(&Acpi);
+  if (!EFI_ERROR(Status))
+    Status = AcAcpiReadFadt(Acpi, &Fadt);
+  AcAcpiClose(Acpi);
+  if (EFI_ERROR(Status) || Fadt.PsciConduit == AcAcpiPsciNone)
+    return Status;
+  Status = AcAppleAdtEnsureNode(Tree, "/psci");
+  if (!EFI_ERROR(Status))
+    Status =
+      AcAppleAdtSetProperty(Tree, "/psci", "compatible", "a64core,psci", sizeof("a64core,psci"));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(
+      Tree, "/psci", "method", Fadt.PsciConduit == AcAcpiPsciSmc ? "smc" : "hvc", sizeof("smc"));
+  if (EFI_ERROR(Status) || HandoffMode != AcCpuHandoffSecureLaunch ||
+      Fadt.PsciConduit != AcAcpiPsciSmc)
+    return Status;
+  Status =
+    AcAppleAdtSetProperty(Tree, "/psci", "a64core,handoff-version", &Version, sizeof(Version));
+  if (!EFI_ERROR(Status))
+    Status =
+      AcAppleAdtSetProperty(Tree, "/psci", "a64core,secondary-entry-el", &EntryEl, sizeof(EntryEl));
+  if (!EFI_ERROR(Status))
+    Status = AcAppleAdtSetProperty(Tree, "/psci", "a64core,reset-entry", &Reset, sizeof(Reset));
+  return Status;
+}
+
+STATIC EFI_STATUS
 ApplyConfiguration(AC_APPLE_ADT_TREE *Tree, CONST AC_ADT_CONFIG *Config)
 {
   CONST VOID *Data;
@@ -194,6 +230,15 @@ ValidateCpuTopology(CONST AC_APPLE_ADT_TREE *Tree, CONST AC_BOOT_PLATFORM *Platf
       break;
     }
     Seen[Match] = TRUE;
+    Status = AcAppleAdtGetProperty(Tree, Path, "a64core,mpidr", &Data, &Size);
+    if (EFI_ERROR(Status))
+      break;
+    if (Size != sizeof(Platform->Madt.Cpus[Match].Mpidr) ||
+        CompareMem(Data, &Platform->Madt.Cpus[Match].Mpidr, Size) != 0)
+    {
+      Status = EFI_COMPROMISED_DATA;
+      break;
+    }
     Status = CheckCpuText(Tree, Path, "state", Reg == Platform->BootMpidr ? "running" : "stopped");
     if (!EFI_ERROR(Status))
       Status = ReadCpuNumber(Tree, Path, "timebase-frequency", &Frequency);
@@ -237,7 +282,8 @@ EFI_STATUS
 InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RESOURCES *Resources,
                              IN CONST AC_BOOT_PLATFORM    *Platform,
                              IN CONST AC_APPLE_NVRAM_INFO *Nvram, IN CONST AC_ADT_CONFIG *Config,
-                             IN BOOLEAN HasTrustCache, OUT AC_APPLE_ADT_TREE **Tree)
+                             IN BOOLEAN HasTrustCache, IN AC_CPU_HANDOFF_MODE HandoffMode,
+                             OUT AC_APPLE_ADT_TREE **Tree)
 {
   AC_APPLE_ADT_TREE         *Result;
   AC_APPLE_BOOT_MEMORY_RANGE Empty = {0};
@@ -274,6 +320,10 @@ InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RES
     if (!EFI_ERROR(Status))
       Status = AcAppleAdtSetProperty(Result, Path, "reg", &Reg, sizeof(Reg));
     if (!EFI_ERROR(Status))
+      Status =
+        AcAppleAdtSetProperty(Result, Path, "a64core,mpidr", &Platform->Madt.Cpus[Index].Mpidr,
+                              sizeof(Platform->Madt.Cpus[Index].Mpidr));
+    if (!EFI_ERROR(Status))
       Status = AcAppleAdtSetProperty(Result, Path, "cpu-id", &CpuId, sizeof(CpuId));
     ++CpuId;
     State = Platform->Madt.Cpus[Index].Mpidr == Platform->BootMpidr ? "running" : "stopped";
@@ -293,6 +343,8 @@ InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RES
                             sizeof(Resources->BootManifestHash));
   if (!EFI_ERROR(Status))
     Status = SetNvramProperties(Result, Nvram);
+  if (!EFI_ERROR(Status))
+    Status = SetPsciProperties(Result, HandoffMode);
   if (!EFI_ERROR(Status))
     Status = ApplyConfiguration(Result, Config);
   if (!EFI_ERROR(Status))
@@ -320,7 +372,35 @@ InternalCreateBootDeviceTree(IN CONST AC_BOOT_ENTRY *Entry, IN CONST AC_BOOT_RES
 EFI_STATUS
 InternalUpdateBootDeviceTree(IN OUT AC_APPLE_ADT_TREE *Tree, IN CONST AC_APPLE_BOOT_INFO *Info)
 {
-  EFI_STATUS Status;
+  EFI_STATUS  Status;
+  CONST VOID *Data;
+  UINTN       Size;
+  UINT64      Reset = Info->Kernel.EntryPoint & ~0xFFFULL;
+  UINT64      Offset;
+  UINT32      Branch, Delta;
+
+  Status = AcAppleAdtGetProperty(Tree, "/psci", "a64core,reset-entry", &Data, &Size);
+  if (!EFI_ERROR(Status))
+  {
+    if (Size != sizeof(Reset) || Info->Kernel.Buffer == NULL || Reset < Info->Kernel.PhysicalBase ||
+        Info->Kernel.Info.MemorySize < sizeof(Branch) ||
+        Info->Kernel.EntryPoint - Info->Kernel.PhysicalBase >= Info->Kernel.Info.MemorySize)
+      return EFI_COMPROMISED_DATA;
+    Offset = Reset - Info->Kernel.PhysicalBase;
+    if (Offset > Info->Kernel.Info.MemorySize - sizeof(Branch))
+      return EFI_COMPROMISED_DATA;
+    CopyMem(&Branch, (CONST UINT8 *)Info->Kernel.Buffer + Offset, sizeof(Branch));
+    Delta = (Branch & 0x3FFFFFFU) * 4;
+    // The supported XNU reset dispatcher precedes the boot entry in its 4 KiB page.
+    if ((Branch & 0xFC000000U) != 0x14000000U || Delta == 0 || Delta >= 0x1000U ||
+        Delta + sizeof(Branch) > Info->Kernel.EntryPoint - Reset)
+      return EFI_UNSUPPORTED;
+    Status = AcAppleAdtSetProperty(Tree, "/psci", "a64core,reset-entry", &Reset, sizeof(Reset));
+  }
+  else if (Status == EFI_NOT_FOUND)
+    Status = EFI_SUCCESS;
+  if (EFI_ERROR(Status))
+    return Status;
 
   // Expose the selected contiguous RAM view, without spanning other banks or holes.
   Status = AcAppleAdtSetProperty(Tree, "/chosen", "dram-base", &Info->ManagedMemory.PhysicalAddress,

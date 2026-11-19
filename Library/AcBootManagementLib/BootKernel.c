@@ -418,7 +418,8 @@ InternalLoadBootKernel(IN EFI_HANDLE ImageHandle, IN CONST AC_BOOT_ENTRY *Entry,
     goto Failure;
   Kernel->Stage = L"Create Apple Device Tree";
   Status = InternalCreateBootDeviceTree(Entry, Resources, &Platform, &NvramInfo, &Config->Adt,
-                                        Input.TrustCacheCount != 0, &DeviceTree);
+                                        Input.TrustCacheCount != 0,
+                                        Config->Platform.CpuHandoff.Mode, &DeviceTree);
   if (EFI_ERROR(Status))
     goto Failure;
   Status = AcAppleAdtSerialize(DeviceTree, &DeviceTreeSize, NULL);
