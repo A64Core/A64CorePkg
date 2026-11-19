@@ -27,7 +27,14 @@ AcAcpiReadFadt(IN CONST AC_ACPI_CONTEXT *Context, OUT AC_ACPI_FADT_INFO *Info)
     return EFI_COMPROMISED_DATA;
   CopyMem(&Fadt, Table, PrefixSize);
   if (Table->Revision == 5 && Fadt.MinorVersion < 1)
-    return EFI_UNSUPPORTED;
+  {
+    // Some hardware-reduced firmware backports ARM flags without updating the revision.
+    if ((Fadt.Flags & EFI_ACPI_6_6_HW_REDUCED_ACPI) == 0 ||
+        (Fadt.ArmBootArch & EFI_ACPI_6_6_ARM_PSCI_COMPLIANT) == 0 ||
+        (Fadt.ArmBootArch & ~(EFI_ACPI_6_6_ARM_PSCI_COMPLIANT | EFI_ACPI_6_6_ARM_PSCI_USE_HVC)) !=
+          0)
+      return EFI_UNSUPPORTED;
+  }
   ZeroMem(&Result, sizeof(Result));
   Result.ArmBootArch = Fadt.ArmBootArch;
   Result.HardwareReducedAcpi = (Fadt.Flags & EFI_ACPI_6_6_HW_REDUCED_ACPI) != 0;

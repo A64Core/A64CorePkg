@@ -161,7 +161,10 @@ typedef struct
 } AC_ACPI_FADT_INFO;
 
 /**
-  Copy ARM boot flags from a unique FADT (signature FACP), revision 5.1 or newer.
+  Copy ARM boot flags from a unique FADT (signature FACP), revision 5 or newer.
+
+  Revision 5.0 is accepted only for hardware-reduced tables with PSCI_COMPLIANT
+  set and no ARM boot flags other than PSCI_COMPLIANT and PSCI_USE_HVC.
 
   Only the prefix through MinorVersion is required and interpreted.
   PsciConduit is None when PSCI_COMPLIANT is clear, regardless of PSCI_USE_HVC.
